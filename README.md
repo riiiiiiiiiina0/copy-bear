@@ -1,13 +1,14 @@
 # Copy Title & URL Chrome Extension
 
-A simple Chrome extension that copies the current tab's title and URL to your clipboard with a single click.
+A simple Chrome extension that copies the current tab's title and URL to your clipboard with single or double clicks in different formats.
 
 ## Features
 
-- 📋 Copy current tab's title and URL to clipboard
+- 📋 **Single Click**: Copy title and URL in plain text format
+- 🔗 **Double Click**: Copy title and URL as markdown link
 - ✔️ Shows success/error feedback on extension icon badge
-- ⚡ Works with one click on the extension icon
-- 🎯 No popup required - direct action
+- ⚡ Works directly from the extension icon - no popup required
+- 🎯 Smart click detection with 300ms double-click window
 - 📱 Non-intrusive visual feedback that auto-disappears
 
 ## Installation
@@ -27,17 +28,30 @@ _Coming soon..._
 
 ## Usage
 
+### Single Click (Plain Text Format)
+
 1. Navigate to any webpage
-2. Click the "Copy Title & URL" extension icon in your toolbar
-3. The page title and URL will be copied to your clipboard in this format:
+2. **Single click** the "Copy Title & URL" extension icon in your toolbar
+3. The page title and URL will be copied in plain text format:
    ```
    Page Title
    https://example.com/page-url
    ```
-4. You'll see a badge on the extension icon:
-   - ✔️ Green badge for successful copy
-   - ⚠️ Red badge for errors
-   - Badge automatically disappears after 3 seconds
+
+### Double Click (Markdown Link Format)
+
+1. Navigate to any webpage
+2. **Double click** the "Copy Title & URL" extension icon in your toolbar
+3. The page title and URL will be copied as a markdown link:
+   ```
+   [Page Title](https://example.com/page-url)
+   ```
+
+### Visual Feedback
+
+- ✔️ Green badge appears for successful copy operations
+- ⚠️ Red badge appears for errors
+- Badge automatically disappears after 3 seconds
 
 ## Permissions
 
@@ -47,18 +61,42 @@ This extension requires the following permissions:
 - `scripting`: To execute the clipboard copy function
 - `action`: To display badge text on the extension icon
 
-## Format
+## Output Formats
 
-The copied text includes:
+### Plain Text Format (Single Click)
 
-- First line: Page title
-- Second line: Full URL
+```
+Page Title
+https://example.com/page-url
+```
 
-Perfect for sharing links, bookmarking, or documentation purposes.
+Perfect for sharing links, plain text documentation, or general copying needs.
+
+### Markdown Link Format (Double Click)
+
+```
+[Page Title](https://example.com/page-url)
+```
+
+Perfect for markdown documents, GitHub issues/PRs, documentation, or any markdown-compatible platform.
+
+## Click Detection
+
+The extension uses intelligent click detection:
+
+- **300ms window** to distinguish between single and double clicks
+- Single clicks are processed after the double-click window expires
+- Double clicks immediately trigger markdown format copying
+- Reliable detection works consistently across different system configurations
 
 ## Development
 
-Built using Chrome Extension Manifest V3 with modern APIs.
+Built using Chrome Extension Manifest V3 with modern APIs:
+
+- Service worker background script
+- Chrome Actions API for icon interactions
+- Chrome Scripting API for clipboard access
+- Fallback clipboard methods for maximum compatibility
 
 ## License
 
