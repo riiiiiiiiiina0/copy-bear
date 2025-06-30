@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copy Title & URL - Options</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+
+    .format-group {
+      margin-bottom: 25px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background-color: #fafafa;
+    }
+
+    .format-group h3 {
+      margin-top: 0;
+      color: #555;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 60px;
+      box-sizing: border-box;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+    }
+
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      font-style: italic;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 30px;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+
+    .save-btn {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .save-btn:hover {
+      background-color: #45a049;
+    }
+
+    .reset-btn {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .reset-btn:hover {
+      background-color: #da190b;
+    }
+
+    .status-message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      font-weight: 500;
+      display: none;
+    }
+
+    .status-message.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-message.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .variables {
+      background-color: #e7f3ff;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .variables h4 {
+      margin-top: 0;
+      color: #0066cc;
+    }
+
+    .variables ul {
+      margin-bottom: 0;
+    }
+
+    .variables li {
+      margin-bottom: 5px;
+    }
+
+    .variables code {
+      background-color: #f0f0f0;
+      padding: 2px 4px;
+      border-radius: 2px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Copy Title & URL - Options</h1>
+
+    <div class="variables">
+      <h4>Available Variables:</h4>
+      <ul>
+        <li><code>&lt;title&gt;</code> - The page title</li>
+        <li><code>&lt;url&gt;</code> - The page URL</li>
+        <li><code>\n</code> - New line</li>
+      </ul>
+    </div>
+
+    <form id="optionsForm">
+      <div class="format-group">
+        <h3>Single Click Format</h3>
+        <label for="singleClickFormat">Format template:</label>
+        <textarea id="singleClickFormat" name="singleClickFormat" placeholder="<title>\n<url>"></textarea>
+        <div class="help-text">This format will be used when you single-click the extension icon.</div>
+      </div>
+
+      <div class="format-group">
+        <h3>Double Click Format</h3>
+        <label for="doubleClickFormat">Format template:</label>
+        <textarea id="doubleClickFormat" name="doubleClickFormat" placeholder="[<title>](<url>)"></textarea>
+        <div class="help-text">This format will be used when you double-click the extension icon.</div>
+      </div>
+
+      <div class="buttons">
+        <button type="submit" class="save-btn">Save Settings</button>
+        <button type="button" id="resetBtn" class="reset-btn">Reset to Defaults</button>
+      </div>
+    </form>
+
+    <div id="statusMessage" class="status-message"></div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+
+</html>

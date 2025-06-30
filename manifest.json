@@ -6,7 +6,8 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "clipboardWrite"
+    "clipboardWrite",
+    "storage"
   ],
   "action": {
     "default_title": "Copy title and URL to clipboard"
@@ -14,6 +15,7 @@
   "background": {
     "service_worker": "background.js"
   },
+  "options_page": "options.html",
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",

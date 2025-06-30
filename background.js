@@ -24,6 +24,16 @@ let clickTimer = null;
 const DOUBLE_CLICK_DELAY = 300; // milliseconds
 
 /**
+ * Default format configurations - used as fallback when storage fails
+ * @type {Object}
+ * @constant
+ */
+const FALLBACK_FORMATS = {
+  singleClickFormat: '<title>\n<url>',
+  doubleClickFormat: '[<title>](<url>)',
+};
+
+/**
  * Shows a badge on the extension icon with specified text and color
  * @param {string} text - The text to display on the badge
  * @param {boolean} [isError=false] - Whether this is an error state (affects color)
@@ -45,34 +55,52 @@ function showBadgeText(text, isError = false) {
 }
 
 /**
- * Copies page title and URL in plain text format (title on first line, URL on second line)
+ * Copies page title and URL using the user's custom single-click format
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
  * @returns {Promise<void>} Promise that resolves when copy operation is complete
- * @description Formats text as "Title\nURL" and calls copyToClipboard
+ * @description Gets user's single-click format from storage and applies it
  */
-async function copyPlainFormat(tab) {
+async function copySingleClickFormat(tab) {
   const title = tab.title;
   const url = tab.url;
-  const textToCopy = `${title}\n${url}`;
 
-  if (tab.id) {
-    await copyToClipboard(tab.id, textToCopy);
+  try {
+    const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
+    const format = result.singleClickFormat || '';
+    const textToCopy = format
+      .replaceAll('<title>', title)
+      .replaceAll('<url>', url);
+
+    if (tab.id) {
+      await copyToClipboard(tab.id, textToCopy);
+    }
+  } catch (error) {
+    console.error('Error getting single-click format:', error);
   }
 }
 
 /**
- * Copies page title and URL in markdown link format
+ * Copies page title and URL using the user's custom double-click format
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
  * @returns {Promise<void>} Promise that resolves when copy operation is complete
- * @description Formats text as "[Title](URL)" markdown link and calls copyToClipboard
+ * @description Gets user's double-click format from storage and applies it
  */
-async function copyMarkdownFormat(tab) {
+async function copyDoubleClickFormat(tab) {
   const title = tab.title;
   const url = tab.url;
-  const textToCopy = `[${title}](${url})`;
 
-  if (tab.id) {
-    await copyToClipboard(tab.id, textToCopy);
+  try {
+    const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
+    const format = result.doubleClickFormat || '';
+    const textToCopy = format
+      .replaceAll('<title>', title)
+      .replaceAll('<url>', url);
+
+    if (tab.id) {
+      await copyToClipboard(tab.id, textToCopy);
+    }
+  } catch (error) {
+    console.error('Error getting double-click format:', error);
   }
 }
 
@@ -144,16 +172,16 @@ chrome.action.onClicked.addListener(async (tab) => {
   if (clickCount === 1) {
     // Start timer for detecting double click
     clickTimer = setTimeout(async () => {
-      // Single click detected - copy plain format
-      await copyPlainFormat(tab);
+      // Single click detected - copy using single-click format
+      await copySingleClickFormat(tab);
       clickCount = 0;
     }, DOUBLE_CLICK_DELAY);
   } else if (clickCount === 2) {
-    // Double click detected - copy markdown format
+    // Double click detected - copy using double-click format
     if (clickTimer) {
       clearTimeout(clickTimer);
     }
-    await copyMarkdownFormat(tab);
+    await copyDoubleClickFormat(tab);
     clickCount = 0;
   }
 });
