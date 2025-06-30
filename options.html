@@ -8,7 +8,7 @@
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      max-width: 600px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
       background-color: #f5f5f5;
@@ -28,18 +28,7 @@
       padding-bottom: 10px;
     }
 
-    .format-group {
-      margin-bottom: 25px;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      background-color: #fafafa;
-    }
 
-    .format-group h3 {
-      margin-top: 0;
-      color: #555;
-    }
 
     label {
       display: block;
@@ -66,12 +55,7 @@
       box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
     }
 
-    .help-text {
-      font-size: 12px;
-      color: #666;
-      margin-top: 5px;
-      font-style: italic;
-    }
+
 
     .buttons {
       display: flex;
@@ -153,12 +137,112 @@
       border-radius: 2px;
       font-family: 'Courier New', monospace;
     }
+
+
+
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      background-color: white;
+      box-sizing: border-box;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+    }
+
+    .config-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .config-table th {
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .config-table td {
+      padding: 20px;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: top;
+    }
+
+    .config-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .config-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .click-type {
+      font-weight: 600;
+      color: #333;
+      min-width: 120px;
+    }
+
+    .action-cell {
+      min-width: 160px;
+    }
+
+    .format-cell {
+      width: 100%;
+    }
+
+    .format-cell textarea {
+      margin-bottom: 10px;
+    }
+
+    .format-description {
+      font-size: 12px;
+      color: #666;
+      font-style: italic;
+      margin-top: 5px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        max-width: 100%;
+        padding: 10px;
+      }
+
+      .config-table {
+        font-size: 14px;
+      }
+
+      .config-table th,
+      .config-table td {
+        padding: 10px;
+      }
+
+      .click-type {
+        min-width: 80px;
+      }
+
+      .action-cell {
+        min-width: 120px;
+      }
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <h1>Copy Title & URL - Options</h1>
+    <h1>📋 Copy Title & URL - Options</h1>
 
     <div class="variables">
       <h4>Available Variables:</h4>
@@ -167,29 +251,65 @@
         <li><code>&lt;url&gt;</code> - The page URL</li>
         <li><code>\n</code> - New line</li>
       </ul>
+      <h4>Action Types:</h4>
+      <ul>
+        <li><strong>Copy to Clipboard:</strong> Copies the formatted text to your clipboard</li>
+        <li><strong>Open URL:</strong> Opens the formatted text as a URL in a new tab (useful for URL shorteners, search
+          engines, etc.)</li>
+      </ul>
     </div>
 
     <form id="optionsForm">
-      <div class="format-group">
-        <h3>Single Click Format</h3>
-        <label for="singleClickFormat">Format template:</label>
-        <textarea id="singleClickFormat" name="singleClickFormat" placeholder="<title>\n<url>"></textarea>
-        <div class="help-text">This format will be used when you single-click the extension icon.</div>
-      </div>
-
-      <div class="format-group">
-        <h3>Double Click Format</h3>
-        <label for="doubleClickFormat">Format template:</label>
-        <textarea id="doubleClickFormat" name="doubleClickFormat" placeholder="[<title>](<url>)"></textarea>
-        <div class="help-text">This format will be used when you double-click the extension icon.</div>
-      </div>
-
-      <div class="format-group">
-        <h3>Triple Click Format</h3>
-        <label for="tripleClickFormat">Format template:</label>
-        <textarea id="tripleClickFormat" name="tripleClickFormat" placeholder="<title>"></textarea>
-        <div class="help-text">This format will be used when you triple-click the extension icon.</div>
-      </div>
+      <table class="config-table">
+        <thead>
+          <tr>
+            <th>Click Type</th>
+            <th>Action</th>
+            <th>Format Template</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="click-type">Single Click</td>
+            <td class="action-cell">
+              <select id="singleClickAction" name="singleClickAction">
+                <option value="copy">Copy to Clipboard</option>
+                <option value="open">Open URL</option>
+              </select>
+            </td>
+            <td class="format-cell">
+              <textarea id="singleClickFormat" name="singleClickFormat" placeholder="<title>\n<url>"></textarea>
+              <div class="format-description">This format will be used when you single-click the extension icon.</div>
+            </td>
+          </tr>
+          <tr>
+            <td class="click-type">Double Click</td>
+            <td class="action-cell">
+              <select id="doubleClickAction" name="doubleClickAction">
+                <option value="copy">Copy to Clipboard</option>
+                <option value="open">Open URL</option>
+              </select>
+            </td>
+            <td class="format-cell">
+              <textarea id="doubleClickFormat" name="doubleClickFormat" placeholder="[<title>](<url>)"></textarea>
+              <div class="format-description">This format will be used when you double-click the extension icon.</div>
+            </td>
+          </tr>
+          <tr>
+            <td class="click-type">Triple Click</td>
+            <td class="action-cell">
+              <select id="tripleClickAction" name="tripleClickAction">
+                <option value="copy">Copy to Clipboard</option>
+                <option value="open">Open URL</option>
+              </select>
+            </td>
+            <td class="format-cell">
+              <textarea id="tripleClickFormat" name="tripleClickFormat" placeholder="<title>"></textarea>
+              <div class="format-description">This format will be used when you triple-click the extension icon.</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
       <div class="buttons">
         <button type="submit" class="save-btn">Save Settings</button>

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Background service worker for Copy Title & URL extension
- * Handles single, double, and triple-click functionality to copy page titles and URLs
- * in different formats (plain text, markdown, or title-only).
+ * Handles single, double, and triple-click functionality to either copy page titles and URLs
+ * to clipboard or open URLs with different formats based on user configuration.
  */
 
 /**
@@ -21,7 +21,7 @@ let clickTimer = 0;
  * @type {number}
  * @constant
  */
-const MULTI_CLICK_DELAY = 400; // milliseconds
+const MULTI_CLICK_DELAY = 500; // milliseconds
 
 /**
  * Default format configurations - used as fallback when storage fails
@@ -29,9 +29,18 @@ const MULTI_CLICK_DELAY = 400; // milliseconds
  * @constant
  */
 const FALLBACK_FORMATS = {
-  singleClickFormat: '<title>\n<url>',
-  doubleClickFormat: '[<title>](<url>)',
-  tripleClickFormat: '<title>',
+  // Copy action formats
+  singleClickCopyFormat: '<title>\n<url>',
+  doubleClickCopyFormat: '[<title>](<url>)',
+  tripleClickCopyFormat: '<title>',
+  // Open URL action formats
+  singleClickOpenFormat: 'https://chatgpt.com?q=<title>',
+  doubleClickOpenFormat: 'https://chatgpt.com?q=<title>',
+  tripleClickOpenFormat: 'https://chatgpt.com?q=<title>',
+  // Action types
+  singleClickAction: 'copy',
+  doubleClickAction: 'copy',
+  tripleClickAction: 'copy',
 };
 
 /**
@@ -56,60 +65,101 @@ function showBadgeText(text, isError = false) {
 }
 
 /**
- * Copies page title and URL using the user's custom format specified by formatKey.
- *
- * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL.
- * @param {string} formatKey - The key for the desired format in storage (e.g., 'singleClickFormat', 'doubleClickFormat', 'tripleClickFormat').
- * @returns {Promise<void>} Promise that resolves when the copy operation is complete.
- * @description Gets the user's format from storage using formatKey, applies it to the current tab's title and URL, and copies the result to the clipboard.
+ * Opens a URL in a new tab
+ * @param {string} url - The URL to open
+ * @returns {Promise<void>} Promise that resolves when the URL is opened
+ * @description Opens the specified URL in a new tab and shows success badge
  */
-async function copyClickFormat(tab, formatKey) {
-  const title = tab.title;
-  const url = tab.url;
-
+async function openUrl(url) {
   try {
-    const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
-    const format = result[formatKey] || '';
-    const textToCopy = format
-      .replaceAll('<title>', title)
-      .replaceAll('<url>', url);
-
-    if (tab.id) {
-      await copyToClipboard(tab.id, textToCopy);
-    }
+    await chrome.tabs.create({ url: url });
+    showBadgeText('🔗');
   } catch (error) {
-    console.error(`Error getting ${formatKey} format:`, error);
+    console.error('Failed to open URL:', error);
+    showBadgeText('⚠️', true);
   }
 }
 
 /**
- * Copies page title and URL using the user's custom single-click format
- * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
- * @returns {Promise<void>} Promise that resolves when copy operation is complete
- * @description Gets user's single-click format from storage and applies it
+ * Performs the action (copy or open URL) using the user's custom format and action specified by keys.
+ *
+ * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL.
+ * @param {string} clickType - The click type ('single', 'double', 'triple').
+ * @param {string} actionKey - The key for the desired action in storage (e.g., 'singleClickAction', 'doubleClickAction', 'tripleClickAction').
+ * @returns {Promise<void>} Promise that resolves when the operation is complete.
+ * @description Gets the user's format and action from storage, applies the format to the current tab's title and URL, and performs the specified action.
  */
-async function copySingleClickFormat(tab) {
-  copyClickFormat(tab, 'singleClickFormat');
+async function performClickAction(tab, clickType, actionKey) {
+  const title = tab.title || '';
+  const url = tab.url || '';
+
+  try {
+    const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
+    const action = result[actionKey] || 'copy';
+
+    // Determine which format to use based on the action type
+    const formatKey =
+      action === 'open'
+        ? `${clickType}ClickOpenFormat`
+        : `${clickType}ClickCopyFormat`;
+    const format = result[formatKey] || FALLBACK_FORMATS[formatKey] || '';
+
+    // Apply different replacements based on action type
+    let formattedText;
+    if (action === 'open') {
+      // For open action, URL encode the title to handle special characters
+      formattedText = format
+        .replaceAll('<title>', encodeURIComponent(title))
+        .replaceAll('<url>', encodeURIComponent(url));
+    } else {
+      // For copy action, use plain text
+      formattedText = format
+        .replaceAll('<title>', title || '')
+        .replaceAll('<url>', url || '');
+    }
+
+    if (action === 'open') {
+      // For open action, treat the formatted text as a URL
+      await openUrl(formattedText);
+    } else {
+      // Default to copy action
+      if (tab.id) {
+        await copyToClipboard(tab.id, formattedText);
+      }
+    }
+  } catch (error) {
+    console.error(`Error performing ${actionKey} action:`, error);
+  }
 }
 
 /**
- * Copies page title and URL using the user's custom double-click format
+ * Performs single-click action using the user's custom single-click format and action
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
- * @returns {Promise<void>} Promise that resolves when copy operation is complete
- * @description Gets user's double-click format from storage and applies it
+ * @returns {Promise<void>} Promise that resolves when operation is complete
+ * @description Gets user's single-click format and action from storage and applies it
  */
-async function copyDoubleClickFormat(tab) {
-  copyClickFormat(tab, 'doubleClickFormat');
+async function performSingleClickAction(tab) {
+  performClickAction(tab, 'single', 'singleClickAction');
 }
 
 /**
- * Copies page title and URL using the user's custom triple-click format
+ * Performs double-click action using the user's custom double-click format and action
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
- * @returns {Promise<void>} Promise that resolves when copy operation is complete
- * @description Gets user's triple-click format from storage and applies it
+ * @returns {Promise<void>} Promise that resolves when operation is complete
+ * @description Gets user's double-click format and action from storage and applies it
  */
-async function copyTripleClickFormat(tab) {
-  copyClickFormat(tab, 'tripleClickFormat');
+async function performDoubleClickAction(tab) {
+  performClickAction(tab, 'double', 'doubleClickAction');
+}
+
+/**
+ * Performs triple-click action using the user's custom triple-click format and action
+ * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
+ * @returns {Promise<void>} Promise that resolves when operation is complete
+ * @description Gets user's triple-click format and action from storage and applies it
+ */
+async function performTripleClickAction(tab) {
+  performClickAction(tab, 'triple', 'tripleClickAction');
 }
 
 /**
@@ -178,12 +228,13 @@ const registerClick = (fn, tab, delay = 0) => {
 
 /**
  * Event listener for extension action button clicks
- * Handles single, double, and triple-click detection to trigger different copy formats
+ * Handles single, double, and triple-click detection to trigger different actions
  * @param {chrome.tabs.Tab} tab - The active tab when the action button was clicked
  * @description
- * - Single click: Copies plain text format (title\nurl)
- * - Double click: Copies markdown format ([title](url))
- * - Triple click: Copies title only format
+ * - Single click: Performs user-configured action with single-click format
+ * - Double click: Performs user-configured action with double-click format
+ * - Triple click: Performs user-configured action with triple-click format
+ * Actions can be either copying to clipboard or opening a URL based on user configuration.
  * Uses a timer-based approach to distinguish between single, double, and triple clicks
  */
 chrome.action.onClicked.addListener(async (tab) => {
@@ -195,11 +246,11 @@ chrome.action.onClicked.addListener(async (tab) => {
   clearTimeout(clickTimer);
 
   if (clickCount === 1) {
-    registerClick(copySingleClickFormat, tab, MULTI_CLICK_DELAY);
+    registerClick(performSingleClickAction, tab, MULTI_CLICK_DELAY);
   } else if (clickCount === 2) {
-    registerClick(copyDoubleClickFormat, tab, MULTI_CLICK_DELAY);
+    registerClick(performDoubleClickAction, tab, MULTI_CLICK_DELAY);
   } else if (clickCount === 3) {
-    registerClick(copyTripleClickFormat, tab, 0);
+    registerClick(performTripleClickAction, tab, 0);
   } else {
     // More than 3 clicks - reset counter
     clickCount = 0;
