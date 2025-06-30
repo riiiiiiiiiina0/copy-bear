@@ -11,6 +11,7 @@
 const DEFAULT_FORMATS = {
   singleClickFormat: '<title>\n<url>',
   doubleClickFormat: '[<title>](<url>)',
+  tripleClickFormat: '<title>',
 };
 
 const singleClickElement = /** @type {HTMLTextAreaElement} */ (
@@ -18,6 +19,9 @@ const singleClickElement = /** @type {HTMLTextAreaElement} */ (
 );
 const doubleClickElement = /** @type {HTMLTextAreaElement} */ (
   document.getElementById('doubleClickFormat')
+);
+const tripleClickElement = /** @type {HTMLTextAreaElement} */ (
+  document.getElementById('tripleClickFormat')
 );
 const optionsForm = /** @type {HTMLFormElement} */ (
   document.getElementById('optionsForm')
@@ -55,6 +59,7 @@ async function loadSavedFormats() {
     const result = await chrome.storage.sync.get(DEFAULT_FORMATS);
     singleClickElement.value = result.singleClickFormat;
     doubleClickElement.value = result.doubleClickFormat;
+    tripleClickElement.value = result.tripleClickFormat;
   } catch (error) {
     console.error('Error loading saved formats:', error);
     showStatusMessage('Error loading saved settings. Using defaults.', true);
@@ -68,11 +73,13 @@ async function saveFormats() {
   try {
     const singleClickFormat = singleClickElement.value.trim() || '';
     const doubleClickFormat = doubleClickElement.value.trim() || '';
+    const tripleClickFormat = tripleClickElement.value.trim() || '';
 
     // Save to Chrome storage
     await chrome.storage.sync.set({
       singleClickFormat: singleClickFormat,
       doubleClickFormat: doubleClickFormat,
+      tripleClickFormat: tripleClickFormat,
     });
 
     showStatusMessage('Settings saved successfully!');
@@ -88,6 +95,7 @@ async function saveFormats() {
 function resetToDefaults() {
   singleClickElement.value = DEFAULT_FORMATS.singleClickFormat;
   doubleClickElement.value = DEFAULT_FORMATS.doubleClickFormat;
+  tripleClickElement.value = DEFAULT_FORMATS.tripleClickFormat;
   showStatusMessage('Reset to default formats.');
   saveFormats();
 }

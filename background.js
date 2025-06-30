@@ -1,7 +1,7 @@
 /**
  * @fileoverview Background service worker for Copy Title & URL extension
- * Handles single and double-click functionality to copy page titles and URLs
- * in different formats (plain text or markdown).
+ * Handles single, double, and triple-click functionality to copy page titles and URLs
+ * in different formats (plain text, markdown, or title-only).
  */
 
 /**
@@ -11,17 +11,17 @@
 let clickCount = 0;
 
 /**
- * Timer reference for detecting double clicks
- * @type {number|null}
+ * Timer reference for detecting multiple clicks
+ * @type {number}
  */
-let clickTimer = null;
+let clickTimer = 0;
 
 /**
- * Maximum delay in milliseconds to wait for a second click
+ * Maximum delay in milliseconds to wait for additional clicks
  * @type {number}
  * @constant
  */
-const DOUBLE_CLICK_DELAY = 300; // milliseconds
+const MULTI_CLICK_DELAY = 400; // milliseconds
 
 /**
  * Default format configurations - used as fallback when storage fails
@@ -31,6 +31,7 @@ const DOUBLE_CLICK_DELAY = 300; // milliseconds
 const FALLBACK_FORMATS = {
   singleClickFormat: '<title>\n<url>',
   doubleClickFormat: '[<title>](<url>)',
+  tripleClickFormat: '<title>',
 };
 
 /**
@@ -55,18 +56,20 @@ function showBadgeText(text, isError = false) {
 }
 
 /**
- * Copies page title and URL using the user's custom single-click format
- * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
- * @returns {Promise<void>} Promise that resolves when copy operation is complete
- * @description Gets user's single-click format from storage and applies it
+ * Copies page title and URL using the user's custom format specified by formatKey.
+ *
+ * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL.
+ * @param {string} formatKey - The key for the desired format in storage (e.g., 'singleClickFormat', 'doubleClickFormat', 'tripleClickFormat').
+ * @returns {Promise<void>} Promise that resolves when the copy operation is complete.
+ * @description Gets the user's format from storage using formatKey, applies it to the current tab's title and URL, and copies the result to the clipboard.
  */
-async function copySingleClickFormat(tab) {
+async function copyClickFormat(tab, formatKey) {
   const title = tab.title;
   const url = tab.url;
 
   try {
     const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
-    const format = result.singleClickFormat || '';
+    const format = result[formatKey] || '';
     const textToCopy = format
       .replaceAll('<title>', title)
       .replaceAll('<url>', url);
@@ -75,8 +78,18 @@ async function copySingleClickFormat(tab) {
       await copyToClipboard(tab.id, textToCopy);
     }
   } catch (error) {
-    console.error('Error getting single-click format:', error);
+    console.error(`Error getting ${formatKey} format:`, error);
   }
+}
+
+/**
+ * Copies page title and URL using the user's custom single-click format
+ * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
+ * @returns {Promise<void>} Promise that resolves when copy operation is complete
+ * @description Gets user's single-click format from storage and applies it
+ */
+async function copySingleClickFormat(tab) {
+  copyClickFormat(tab, 'singleClickFormat');
 }
 
 /**
@@ -86,22 +99,17 @@ async function copySingleClickFormat(tab) {
  * @description Gets user's double-click format from storage and applies it
  */
 async function copyDoubleClickFormat(tab) {
-  const title = tab.title;
-  const url = tab.url;
+  copyClickFormat(tab, 'doubleClickFormat');
+}
 
-  try {
-    const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
-    const format = result.doubleClickFormat || '';
-    const textToCopy = format
-      .replaceAll('<title>', title)
-      .replaceAll('<url>', url);
-
-    if (tab.id) {
-      await copyToClipboard(tab.id, textToCopy);
-    }
-  } catch (error) {
-    console.error('Error getting double-click format:', error);
-  }
+/**
+ * Copies page title and URL using the user's custom triple-click format
+ * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
+ * @returns {Promise<void>} Promise that resolves when copy operation is complete
+ * @description Gets user's triple-click format from storage and applies it
+ */
+async function copyTripleClickFormat(tab) {
+  copyClickFormat(tab, 'tripleClickFormat');
 }
 
 /**
@@ -156,32 +164,44 @@ async function copyToClipboard(tabId, textToCopy) {
 }
 
 /**
+ * Registers a click handler with a delay, resetting clickCount after execution.
+ * @param {(tab: chrome.tabs.Tab) => Promise<void>} fn - The function to execute, accepting a tab parameter.
+ * @param {chrome.tabs.Tab} tab - The tab object to pass to the handler function.
+ * @param {number} [delay=0] - The delay in milliseconds before executing the function.
+ */
+const registerClick = (fn, tab, delay = 0) => {
+  clickTimer = setTimeout(async () => {
+    await fn(tab);
+    clickCount = 0;
+  }, delay);
+};
+
+/**
  * Event listener for extension action button clicks
- * Handles both single and double-click detection to trigger different copy formats
+ * Handles single, double, and triple-click detection to trigger different copy formats
  * @param {chrome.tabs.Tab} tab - The active tab when the action button was clicked
  * @description
  * - Single click: Copies plain text format (title\nurl)
  * - Double click: Copies markdown format ([title](url))
- * Uses a timer-based approach to distinguish between single and double clicks
+ * - Triple click: Copies title only format
+ * Uses a timer-based approach to distinguish between single, double, and triple clicks
  */
 chrome.action.onClicked.addListener(async (tab) => {
   if (!tab.id) return;
 
   clickCount++;
 
+  // Clear the timer but don't execute yet - wait for potential double or triple click
+  clearTimeout(clickTimer);
+
   if (clickCount === 1) {
-    // Start timer for detecting double click
-    clickTimer = setTimeout(async () => {
-      // Single click detected - copy using single-click format
-      await copySingleClickFormat(tab);
-      clickCount = 0;
-    }, DOUBLE_CLICK_DELAY);
+    registerClick(copySingleClickFormat, tab, MULTI_CLICK_DELAY);
   } else if (clickCount === 2) {
-    // Double click detected - copy using double-click format
-    if (clickTimer) {
-      clearTimeout(clickTimer);
-    }
-    await copyDoubleClickFormat(tab);
+    registerClick(copyDoubleClickFormat, tab, MULTI_CLICK_DELAY);
+  } else if (clickCount === 3) {
+    registerClick(copyTripleClickFormat, tab, 0);
+  } else {
+    // More than 3 clicks - reset counter
     clickCount = 0;
   }
 });
