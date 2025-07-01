@@ -11,7 +11,7 @@
       --bg-color: #f5f5f5;
       --container-bg: #ffffff;
       --text-color: #333333;
-      --text-muted: #666666;
+      --text-muted: #efefef;
       --border-color: #ddd;
       --border-light: #e0e0e0;
       --primary-color: #4CAF50;
@@ -40,7 +40,7 @@
         --bg-color: #1a1a1a;
         --container-bg: #2d2d2d;
         --text-color: #e0e0e0;
-        --text-muted: #b0b0b0;
+        --text-muted: #efefef;
         --border-color: #404040;
         --border-light: #4a4a4a;
         --primary-color: #66bb6a;
@@ -207,6 +207,23 @@
       transition: all 0.3s ease;
     }
 
+    .variables code.clickable {
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .variables code.clickable:hover {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+      transform: translateY(-1px);
+    }
+
+    .variables code.clickable:active {
+      transform: translateY(0);
+    }
+
 
 
     .config-table {
@@ -262,6 +279,7 @@
 
     .format-description {
       font-size: 12px;
+      font-weight: 400;
       color: var(--text-muted);
       font-style: italic;
       margin-top: 5px;
@@ -300,6 +318,7 @@
         <li><code>&lt;title&gt;</code> - The page title</li>
         <li><code>&lt;url&gt;</code> - The page URL</li>
       </ul>
+      <br />
       <h4>Action Types (Auto-detected):</h4>
       <ul>
         <li><strong>Copy to Clipboard:</strong> Used when format doesn't start with a URL scheme (http://, https://,
@@ -307,6 +326,22 @@
         <li><strong>Open URL:</strong> Used automatically when format starts with a URL scheme (e.g.,
           https://example.com/search?q=&lt;title&gt;)</li>
       </ul>
+      <br />
+      <h4>Examples:</h4>
+      <div style="font-size: 13px; color: var(--info-text); margin-bottom: 8px;">
+        <em>Tip: Click any example below to copy it to your clipboard.</em>
+      </div>
+      <ul>
+        <li><strong>Markdown:</strong> <code class="clickable" data-copy="[&lt;title&gt;](&lt;url&gt;)"
+            title="Click to copy">[&lt;title&gt;](&lt;url&gt;)</code></li>
+        <li><strong>Search with ChatGPT:</strong> <code class="clickable"
+            data-copy="https://chatgpt.com?hint=search&q=Summarize%20&lt;url&gt;"
+            title="Click to copy">https://chatgpt.com?hint=search&q=Summarize%20&lt;url&gt;</code>
+        </li>
+        <li><strong>Launch macOS Shortcuts:</strong> <code class="clickable"
+            data-copy="shortcuts://run-shortcut?name=Test&input=foo"
+            title="Click to copy">shortcuts://run-shortcut?name=Test&input=foo</code></li>
+      </ul>:
     </div>
 
     <form id="optionsForm">
@@ -314,7 +349,11 @@
         <thead>
           <tr>
             <th>Click Type</th>
-            <th>Format Template</th>
+            <th>
+              Format Template
+              <div class="format-description">This format will be used when you single-click the extension icon. Start
+                with a URL scheme (http://, https://, etc.) to open as URL, otherwise will copy to clipboard.</div>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -322,24 +361,18 @@
             <td class="click-type">Single Click</td>
             <td class="format-cell">
               <textarea id="singleClickFormat" name="singleClickFormat" placeholder="<title>\n<url>"></textarea>
-              <div class="format-description">This format will be used when you single-click the extension icon. Start
-                with a URL scheme (http://, https://, etc.) to open as URL, otherwise will copy to clipboard.</div>
             </td>
           </tr>
           <tr>
             <td class="click-type">Double Click</td>
             <td class="format-cell">
               <textarea id="doubleClickFormat" name="doubleClickFormat" placeholder="[<title>](<url>)"></textarea>
-              <div class="format-description">This format will be used when you double-click the extension icon. Start
-                with a URL scheme (http://, https://, etc.) to open as URL, otherwise will copy to clipboard.</div>
             </td>
           </tr>
           <tr>
             <td class="click-type">Triple Click</td>
             <td class="format-cell">
               <textarea id="tripleClickFormat" name="tripleClickFormat" placeholder="<title>"></textarea>
-              <div class="format-description">This format will be used when you triple-click the extension icon. Start
-                with a URL scheme (http://, https://, etc.) to open as URL, otherwise will copy to clipboard.</div>
             </td>
           </tr>
         </tbody>

@@ -112,6 +112,64 @@ async function resetToDefaults() {
 }
 
 /**
+ * Copies text to clipboard
+ * @param {string} text - The text to copy
+ * @returns {Promise<boolean>} - True if successful, false otherwise
+ */
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error);
+    return false;
+  }
+}
+
+/**
+ * Sets up click handlers for clickable code elements
+ */
+function setupClickableCodeHandlers() {
+  const clickableCodeElements = document.querySelectorAll('code.clickable');
+
+  clickableCodeElements.forEach((element) => {
+    const codeElement = /** @type {HTMLElement} */ (element);
+    codeElement.addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      const textToCopy = codeElement.getAttribute('data-copy');
+      if (!textToCopy) return;
+
+      // Decode HTML entities for copying
+      const decodedText = textToCopy
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>');
+
+      const success = await copyToClipboard(decodedText);
+
+      if (success) {
+        // Provide visual feedback
+        const originalTitle = codeElement.title;
+        codeElement.title = 'Copied!';
+        codeElement.style.backgroundColor = 'var(--primary-color)';
+        codeElement.style.color = 'white';
+
+        // Reset after a short delay
+        setTimeout(() => {
+          codeElement.title = originalTitle;
+          codeElement.style.backgroundColor = '';
+          codeElement.style.color = '';
+        }, 1000);
+
+        showStatusMessage('Format copied to clipboard!');
+      } else {
+        showStatusMessage('Failed to copy format. Please try again.', true);
+      }
+    });
+  });
+}
+
+/**
  * Initializes the options page when the DOM is loaded
  */
 document.addEventListener('DOMContentLoaded', async () => {
@@ -126,4 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Set up reset button handler
   resetBtn.addEventListener('click', resetToDefaults);
+
+  // Set up clickable code handlers
+  setupClickableCodeHandlers();
 });
