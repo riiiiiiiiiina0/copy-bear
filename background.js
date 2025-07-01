@@ -65,17 +65,30 @@ function showBadgeText(text, isError = false) {
 }
 
 /**
- * Opens a URL in a new tab
+ * Opens a URL. If http/https, opens in a new tab. Otherwise, opens a confirmation popup.
  * @param {string} url - The URL to open
- * @returns {Promise<void>} Promise that resolves when the URL is opened
- * @description Opens the specified URL in a new tab and shows success badge
+ * @returns {Promise<void>} Promise that resolves when the URL is opened or popup is triggered
+ * @description Checks URL scheme. For http/https, opens in new tab. For custom schemes,
+ *              stores URL and opens a confirmation popup.
  */
 async function openUrl(url) {
   try {
-    await chrome.tabs.create({ url: url });
-    showBadgeText('🔗');
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      await chrome.tabs.create({ url: url });
+      showBadgeText('🔗');
+    } else {
+      // Custom protocol detected
+      await chrome.storage.local.set({ customProtocolUrl: url });
+      // Ensure popup.html is set as the action popup
+      // This might be redundant if default_popup is set in manifest,
+      // but ensures programmatic opening works as intended.
+      // await chrome.action.setPopup({ popup: 'popup.html' }); // Temporarily removed, will rely on manifest
+      await chrome.action.openPopup();
+      // Badge will be shown by the popup logic if needed, or we can show a generic one here
+      showBadgeText('❓'); // Indicate a prompt will follow
+    }
   } catch (error) {
-    console.error('Failed to open URL:', error);
+    console.error('Failed to open URL or popup:', error);
     showBadgeText('⚠️', true);
   }
 }
