@@ -207,23 +207,7 @@
       transition: all 0.3s ease;
     }
 
-    select {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid var(--input-border);
-      border-radius: 4px;
-      font-size: 14px;
-      background-color: var(--input-bg);
-      color: var(--text-color);
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-    }
 
-    select:focus {
-      outline: none;
-      border-color: var(--input-focus-border);
-      box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
-    }
 
     .config-table {
       width: 100%;
@@ -268,10 +252,6 @@
       transition: color 0.3s ease;
     }
 
-    .action-cell {
-      min-width: 160px;
-    }
-
     .format-cell {
       width: 100%;
     }
@@ -306,10 +286,6 @@
       .click-type {
         min-width: 80px;
       }
-
-      .action-cell {
-        min-width: 120px;
-      }
     }
   </style>
 </head>
@@ -324,11 +300,12 @@
         <li><code>&lt;title&gt;</code> - The page title</li>
         <li><code>&lt;url&gt;</code> - The page URL</li>
       </ul>
-      <h4>Action Types:</h4>
+      <h4>Action Types (Auto-detected):</h4>
       <ul>
-        <li><strong>Copy to Clipboard:</strong> Copies the formatted text to your clipboard</li>
-        <li><strong>Open URL:</strong> Opens the formatted text as a URL in a new tab (useful for URL shorteners, search
-          engines, etc.)</li>
+        <li><strong>Copy to Clipboard:</strong> Used when format doesn't start with a URL scheme (http://, https://,
+          etc.)</li>
+        <li><strong>Open URL:</strong> Used automatically when format starts with a URL scheme (e.g.,
+          https://example.com/search?q=&lt;title&gt;)</li>
       </ul>
     </div>
 
@@ -337,48 +314,32 @@
         <thead>
           <tr>
             <th>Click Type</th>
-            <th>Action</th>
             <th>Format Template</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td class="click-type">Single Click</td>
-            <td class="action-cell">
-              <select id="singleClickAction" name="singleClickAction">
-                <option value="copy">Copy to Clipboard</option>
-                <option value="open">Open URL</option>
-              </select>
-            </td>
             <td class="format-cell">
               <textarea id="singleClickFormat" name="singleClickFormat" placeholder="<title>\n<url>"></textarea>
-              <div class="format-description">This format will be used when you single-click the extension icon.</div>
+              <div class="format-description">This format will be used when you single-click the extension icon. Start
+                with a URL scheme (http://, https://, etc.) to open as URL, otherwise will copy to clipboard.</div>
             </td>
           </tr>
           <tr>
             <td class="click-type">Double Click</td>
-            <td class="action-cell">
-              <select id="doubleClickAction" name="doubleClickAction">
-                <option value="copy">Copy to Clipboard</option>
-                <option value="open">Open URL</option>
-              </select>
-            </td>
             <td class="format-cell">
               <textarea id="doubleClickFormat" name="doubleClickFormat" placeholder="[<title>](<url>)"></textarea>
-              <div class="format-description">This format will be used when you double-click the extension icon.</div>
+              <div class="format-description">This format will be used when you double-click the extension icon. Start
+                with a URL scheme (http://, https://, etc.) to open as URL, otherwise will copy to clipboard.</div>
             </td>
           </tr>
           <tr>
             <td class="click-type">Triple Click</td>
-            <td class="action-cell">
-              <select id="tripleClickAction" name="tripleClickAction">
-                <option value="copy">Copy to Clipboard</option>
-                <option value="open">Open URL</option>
-              </select>
-            </td>
             <td class="format-cell">
               <textarea id="tripleClickFormat" name="tripleClickFormat" placeholder="<title>"></textarea>
-              <div class="format-description">This format will be used when you triple-click the extension icon.</div>
+              <div class="format-description">This format will be used when you triple-click the extension icon. Start
+                with a URL scheme (http://, https://, etc.) to open as URL, otherwise will copy to clipboard.</div>
             </td>
           </tr>
         </tbody>

@@ -2,6 +2,7 @@
  * @fileoverview Background service worker for Copy Title & URL extension
  * Handles single, double, and triple-click functionality to either copy page titles and URLs
  * to clipboard or open URLs with different formats based on user configuration.
+ * Actions are automatically determined by the format template.
  */
 
 /**
@@ -29,19 +30,24 @@ const MULTI_CLICK_DELAY = 500; // milliseconds
  * @constant
  */
 const FALLBACK_FORMATS = {
-  // Copy action formats
-  singleClickCopyFormat: '<title>\n<url>',
-  doubleClickCopyFormat: '[<title>](<url>)',
-  tripleClickCopyFormat: '<title>',
-  // Open URL action formats
-  singleClickOpenFormat: 'https://chatgpt.com?q=<title>',
-  doubleClickOpenFormat: 'https://chatgpt.com?q=<title>',
-  tripleClickOpenFormat: 'https://chatgpt.com?q=<title>',
-  // Action types
-  singleClickAction: 'copy',
-  doubleClickAction: 'copy',
-  tripleClickAction: 'copy',
+  // Format templates (action is auto-detected based on URL scheme)
+  singleClickFormat: '<title>\n<url>',
+  doubleClickFormat: '[<title>](<url>)',
+  tripleClickFormat: '<title>',
 };
+
+/**
+ * Detects if a format template starts with a URL scheme
+ * @param {string} format - The format template to check
+ * @returns {boolean} True if the format starts with a URL scheme
+ */
+function isUrlFormat(format) {
+  if (!format || typeof format !== 'string') {
+    return false;
+  }
+
+  return format.includes('://');
+}
 
 /**
  * Shows a badge on the extension icon with specified text and color
@@ -84,9 +90,11 @@ async function openUrl(url) {
       // but ensures programmatic opening works as intended.
       // await chrome.action.setPopup({ popup: 'popup.html' }); // Temporarily removed, will rely on manifest
       // await chrome.action.openPopup(); // Replaced with opening a new tab
-      await chrome.tabs.create({ url: chrome.runtime.getURL("launch_custom_url.html") });
+      await chrome.tabs.create({
+        url: chrome.runtime.getURL('launch_custom_url.html'),
+      });
       // Badge will be shown by the popup logic if needed, or we can show a generic one here
-      showBadgeText('❓'); // Indicate a prompt will follow
+      showBadgeText('⤴️'); // Indicate a prompt will follow
     }
   } catch (error) {
     console.error('Failed to open URL or launch page:', error);
@@ -95,32 +103,29 @@ async function openUrl(url) {
 }
 
 /**
- * Performs the action (copy or open URL) using the user's custom format and action specified by keys.
+ * Performs the action (copy or open URL) using the user's custom format with auto-detected action.
  *
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL.
  * @param {string} clickType - The click type ('single', 'double', 'triple').
- * @param {string} actionKey - The key for the desired action in storage (e.g., 'singleClickAction', 'doubleClickAction', 'tripleClickAction').
  * @returns {Promise<void>} Promise that resolves when the operation is complete.
- * @description Gets the user's format and action from storage, applies the format to the current tab's title and URL, and performs the specified action.
+ * @description Gets the user's format from storage, applies the format to the current tab's title and URL,
+ * and performs the action (copy or open) based on whether the format starts with a URL scheme.
  */
-async function performClickAction(tab, clickType, actionKey) {
+async function performClickAction(tab, clickType) {
   const title = tab.title || '';
   const url = tab.url || '';
 
   try {
     const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
-    const action = result[actionKey] || 'copy';
-
-    // Determine which format to use based on the action type
-    const formatKey =
-      action === 'open'
-        ? `${clickType}ClickOpenFormat`
-        : `${clickType}ClickCopyFormat`;
+    const formatKey = `${clickType}ClickFormat`;
     const format = result[formatKey] || FALLBACK_FORMATS[formatKey] || '';
+
+    // Auto-detect action based on format template
+    const isUrlAction = isUrlFormat(format);
 
     // Apply different replacements based on action type
     let formattedText;
-    if (action === 'open') {
+    if (isUrlAction) {
       // For open action, URL encode the title to handle special characters
       formattedText = format
         .replaceAll('<title>', encodeURIComponent(title))
@@ -132,7 +137,7 @@ async function performClickAction(tab, clickType, actionKey) {
         .replaceAll('<url>', url || '');
     }
 
-    if (action === 'open') {
+    if (isUrlAction) {
       // For open action, treat the formatted text as a URL
       await openUrl(formattedText);
     } else {
@@ -142,38 +147,38 @@ async function performClickAction(tab, clickType, actionKey) {
       }
     }
   } catch (error) {
-    console.error(`Error performing ${actionKey} action:`, error);
+    console.error(`Error performing ${clickType} click action:`, error);
   }
 }
 
 /**
- * Performs single-click action using the user's custom single-click format and action
+ * Performs single-click action using the user's custom single-click format
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
  * @returns {Promise<void>} Promise that resolves when operation is complete
- * @description Gets user's single-click format and action from storage and applies it
+ * @description Gets user's single-click format from storage and applies it with auto-detected action
  */
 async function performSingleClickAction(tab) {
-  performClickAction(tab, 'single', 'singleClickAction');
+  performClickAction(tab, 'single');
 }
 
 /**
- * Performs double-click action using the user's custom double-click format and action
+ * Performs double-click action using the user's custom double-click format
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
  * @returns {Promise<void>} Promise that resolves when operation is complete
- * @description Gets user's double-click format and action from storage and applies it
+ * @description Gets user's double-click format from storage and applies it with auto-detected action
  */
 async function performDoubleClickAction(tab) {
-  performClickAction(tab, 'double', 'doubleClickAction');
+  performClickAction(tab, 'double');
 }
 
 /**
- * Performs triple-click action using the user's custom triple-click format and action
+ * Performs triple-click action using the user's custom triple-click format
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
  * @returns {Promise<void>} Promise that resolves when operation is complete
- * @description Gets user's triple-click format and action from storage and applies it
+ * @description Gets user's triple-click format from storage and applies it with auto-detected action
  */
 async function performTripleClickAction(tab) {
-  performClickAction(tab, 'triple', 'tripleClickAction');
+  performClickAction(tab, 'triple');
 }
 
 /**
