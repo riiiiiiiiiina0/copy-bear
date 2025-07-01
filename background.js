@@ -83,12 +83,13 @@ async function openUrl(url) {
       // This might be redundant if default_popup is set in manifest,
       // but ensures programmatic opening works as intended.
       // await chrome.action.setPopup({ popup: 'popup.html' }); // Temporarily removed, will rely on manifest
-      await chrome.action.openPopup();
+      // await chrome.action.openPopup(); // Replaced with opening a new tab
+      await chrome.tabs.create({ url: chrome.runtime.getURL("launch_custom_url.html") });
       // Badge will be shown by the popup logic if needed, or we can show a generic one here
       showBadgeText('❓'); // Indicate a prompt will follow
     }
   } catch (error) {
-    console.error('Failed to open URL or popup:', error);
+    console.error('Failed to open URL or launch page:', error);
     showBadgeText('⚠️', true);
   }
 }
