@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Launch URL</title>
+  <meta charset="UTF-8">
+  <style>
+    :root {
+      /* Light mode colors */
+      --bg-color: #ffffff;
+      --text-color: #333333;
+      --button-bg: #007bff;
+      --button-hover-bg: #0056b3;
+      --button-text: #ffffff;
+      --url-display-bg: #eee;
+      --url-display-text: #555;
+      --border-color: #ddd;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        /* Dark mode colors */
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --button-bg: #0d6efd;
+        --button-hover-bg: #0b5ed7;
+        --button-text: #ffffff;
+        --url-display-bg: #2d2d2d;
+        --url-display-text: #b0b0b0;
+        --border-color: #404040;
+      }
+    }
+
+    body {
+      font-family: sans-serif;
+      width: 300px;
+      /* Adjusted width for better content display */
+      padding: 10px;
+      text-align: center;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #launchButton {
+      display: inline-block;
+      padding: 20px 30px;
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 32px;
+      margin-bottom: 10px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #launchButton:hover {
+      background-color: var(--button-hover-bg);
+      transform: translateY(-1px);
+    }
+
+    #launchButton:active {
+      transform: translateY(0);
+    }
+
+    #urlDisplay {
+      font-size: 12px;
+      color: var(--url-display-text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      background-color: var(--url-display-bg);
+      word-wrap: break-word;
+      max-width: 500px;
+      /* Ensure long URLs wrap */
+      margin-top: 8px;
+      border: 1px solid var(--border-color);
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Optional: Add a subtle animation for smoother transitions */
+    * {
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <button id="launchButton">Click to launch</button>
+    <div id="urlDisplay">Loading URL...</div>
+  </div>
+  <script src="launch_custom_url.js"></script>
+</body>
+
+</html>

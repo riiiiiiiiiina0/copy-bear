@@ -20,5 +20,11 @@
     "16": "icon-16.png",
     "48": "icon-48.png",
     "128": "icon-128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["launch_custom_url.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
