@@ -6,56 +6,118 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Copy Title & URL - Options</title>
   <style>
+    :root {
+      /* Light mode colors */
+      --bg-color: #f5f5f5;
+      --container-bg: #ffffff;
+      --text-color: #333333;
+      --text-muted: #666666;
+      --border-color: #ddd;
+      --border-light: #e0e0e0;
+      --primary-color: #4CAF50;
+      --primary-hover: #45a049;
+      --danger-color: #f44336;
+      --danger-hover: #da190b;
+      --input-bg: #ffffff;
+      --input-border: #ddd;
+      --input-focus-border: #4CAF50;
+      --table-stripe: #f9f9f9;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --success-bg: #d4edda;
+      --success-text: #155724;
+      --success-border: #c3e6cb;
+      --error-bg: #f8d7da;
+      --error-text: #721c24;
+      --error-border: #f5c6cb;
+      --info-bg: #e7f3ff;
+      --info-text: #0066cc;
+      --code-bg: #f0f0f0;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        /* Dark mode colors */
+        --bg-color: #1a1a1a;
+        --container-bg: #2d2d2d;
+        --text-color: #e0e0e0;
+        --text-muted: #b0b0b0;
+        --border-color: #404040;
+        --border-light: #4a4a4a;
+        --primary-color: #66bb6a;
+        --primary-hover: #5cb85c;
+        --danger-color: #ef5350;
+        --danger-hover: #f44336;
+        --input-bg: #3a3a3a;
+        --input-border: #555555;
+        --input-focus-border: #66bb6a;
+        --table-stripe: #353535;
+        --shadow: rgba(0, 0, 0, 0.3);
+        --success-bg: #1b5e20;
+        --success-text: #c8e6c9;
+        --success-border: #2e7d32;
+        --error-bg: #c62828;
+        --error-text: #ffcdd2;
+        --error-border: #d32f2f;
+        --info-bg: #0d47a1;
+        --info-text: #bbdefb;
+        --code-bg: #404040;
+      }
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #f5f5f5;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .container {
-      background: white;
+      background: var(--container-bg);
       padding: 30px;
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 10px var(--shadow);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     h1 {
-      color: #333;
+      color: var(--text-color);
       margin-bottom: 20px;
-      border-bottom: 2px solid #4CAF50;
+      border-bottom: 2px solid var(--primary-color);
       padding-bottom: 10px;
+      transition: color 0.3s ease, border-color 0.3s ease;
     }
-
-
 
     label {
       display: block;
       margin-bottom: 5px;
       font-weight: 500;
-      color: #333;
+      color: var(--text-color);
+      transition: color 0.3s ease;
     }
 
     textarea {
       width: 100%;
       padding: 10px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--input-border);
       border-radius: 4px;
       font-family: 'Courier New', monospace;
       font-size: 14px;
       resize: vertical;
       min-height: 60px;
       box-sizing: border-box;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      transition: all 0.3s ease;
     }
 
     textarea:focus {
       outline: none;
-      border-color: #4CAF50;
+      border-color: var(--input-focus-border);
       box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
     }
-
-
 
     .buttons {
       display: flex;
@@ -74,21 +136,21 @@
     }
 
     .save-btn {
-      background-color: #4CAF50;
+      background-color: var(--primary-color);
       color: white;
     }
 
     .save-btn:hover {
-      background-color: #45a049;
+      background-color: var(--primary-hover);
     }
 
     .reset-btn {
-      background-color: #f44336;
+      background-color: var(--danger-color);
       color: white;
     }
 
     .reset-btn:hover {
-      background-color: #da190b;
+      background-color: var(--danger-hover);
     }
 
     .status-message {
@@ -97,30 +159,33 @@
       border-radius: 4px;
       font-weight: 500;
       display: none;
+      transition: all 0.3s ease;
     }
 
     .status-message.success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
+      background-color: var(--success-bg);
+      color: var(--success-text);
+      border: 1px solid var(--success-border);
     }
 
     .status-message.error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
+      background-color: var(--error-bg);
+      color: var(--error-text);
+      border: 1px solid var(--error-border);
     }
 
     .variables {
-      background-color: #e7f3ff;
+      background-color: var(--info-bg);
       padding: 15px;
       border-radius: 4px;
       margin-bottom: 20px;
+      transition: background-color 0.3s ease;
     }
 
     .variables h4 {
       margin-top: 0;
-      color: #0066cc;
+      color: var(--info-text);
+      transition: color 0.3s ease;
     }
 
     .variables ul {
@@ -129,30 +194,34 @@
 
     .variables li {
       margin-bottom: 5px;
+      color: var(--text-color);
+      transition: color 0.3s ease;
     }
 
     .variables code {
-      background-color: #f0f0f0;
+      background-color: var(--code-bg);
       padding: 2px 4px;
       border-radius: 2px;
       font-family: 'Courier New', monospace;
+      color: var(--text-color);
+      transition: all 0.3s ease;
     }
-
-
 
     select {
       width: 100%;
       padding: 8px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--input-border);
       border-radius: 4px;
       font-size: 14px;
-      background-color: white;
+      background-color: var(--input-bg);
+      color: var(--text-color);
       box-sizing: border-box;
+      transition: all 0.3s ease;
     }
 
     select:focus {
       outline: none;
-      border-color: #4CAF50;
+      border-color: var(--input-focus-border);
       box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
     }
 
@@ -160,14 +229,15 @@
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 30px;
-      background-color: white;
+      background-color: var(--container-bg);
       border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 10px var(--shadow);
       overflow: hidden;
+      transition: all 0.3s ease;
     }
 
     .config-table th {
-      background-color: #4CAF50;
+      background-color: var(--primary-color);
       color: white;
       padding: 15px;
       text-align: left;
@@ -177,22 +247,25 @@
 
     .config-table td {
       padding: 20px;
-      border-bottom: 1px solid #e0e0e0;
+      border-bottom: 1px solid var(--border-light);
       vertical-align: top;
+      background-color: var(--container-bg);
+      transition: all 0.3s ease;
     }
 
     .config-table tr:last-child td {
       border-bottom: none;
     }
 
-    .config-table tr:nth-child(even) {
-      background-color: #f9f9f9;
+    .config-table tr:nth-child(even) td {
+      background-color: var(--table-stripe);
     }
 
     .click-type {
       font-weight: 600;
-      color: #333;
+      color: var(--text-color);
       min-width: 120px;
+      transition: color 0.3s ease;
     }
 
     .action-cell {
@@ -209,9 +282,10 @@
 
     .format-description {
       font-size: 12px;
-      color: #666;
+      color: var(--text-muted);
       font-style: italic;
       margin-top: 5px;
+      transition: color 0.3s ease;
     }
 
     @media (max-width: 768px) {
@@ -249,7 +323,6 @@
       <ul>
         <li><code>&lt;title&gt;</code> - The page title</li>
         <li><code>&lt;url&gt;</code> - The page URL</li>
-        <li><code>\n</code> - New line</li>
       </ul>
       <h4>Action Types:</h4>
       <ul>
