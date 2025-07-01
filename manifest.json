@@ -7,10 +7,34 @@
     "activeTab",
     "scripting",
     "clipboardWrite",
-    "storage"
+    "storage",
+    "commands"
   ],
   "action": {
     "default_title": "Copy title and URL to clipboard"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "MacCtrl+Shift+1",
+        "mac": "Command+Shift+1"
+      },
+      "description": "Perform single-click action"
+    },
+    "double_click_action": {
+      "suggested_key": {
+        "default": "MacCtrl+Shift+2",
+        "mac": "Command+Shift+2"
+      },
+      "description": "Perform double-click action"
+    },
+    "triple_click_action": {
+      "suggested_key": {
+        "default": "MacCtrl+Shift+3",
+        "mac": "Command+Shift+3"
+      },
+      "description": "Perform triple-click action"
+    }
   },
   "background": {
     "service_worker": "background.js"

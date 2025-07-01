@@ -292,3 +292,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     showBadgeText('⚠️', true);
   }
 });
+
+/**
+ * Event listener for keyboard shortcuts
+ * Handles defined commands to trigger corresponding click actions
+ * @param {string} command - The name of the command that was triggered
+ * @description
+ * - _execute_action (Cmd+Shift+1): Performs single-click action
+ * - double_click_action (Cmd+Shift+2): Performs double-click action
+ * - triple_click_action (Cmd+Shift+3): Performs triple-click action
+ */
+chrome.commands.onCommand.addListener(async (command) => {
+  // Get the current active tab
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  if (!tab || !tab.id) {
+    console.warn('No active tab found for command:', command);
+    return;
+  }
+
+  switch (command) {
+    case '_execute_action': // Corresponds to Command+Shift+1
+      await performSingleClickAction(tab);
+      break;
+    case 'double_click_action': // Corresponds to Command+Shift+2
+      await performDoubleClickAction(tab);
+      break;
+    case 'triple_click_action': // Corresponds to Command+Shift+3
+      await performTripleClickAction(tab);
+      break;
+    default:
+      console.warn('Unknown command received:', command);
+  }
+});
