@@ -203,6 +203,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Set up import button handler
   importBtn.addEventListener('click', () => importFile.click());
   importFile.addEventListener('change', importConfig);
+
+  // Detect OS and display appropriate shortcut key
+  const shortcutKeySpan = document.getElementById('shortcut-key');
+  if (shortcutKeySpan) {
+    if (navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
+      shortcutKeySpan.textContent = 'Cmd';
+    } else {
+      shortcutKeySpan.textContent = 'Ctrl';
+    }
+  }
 });
 
 /**
