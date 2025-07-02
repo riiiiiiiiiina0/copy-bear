@@ -32,6 +32,15 @@ const optionsForm = /** @type {HTMLFormElement} */ (
 const resetBtn = /** @type {HTMLButtonElement} */ (
   document.getElementById('resetBtn')
 );
+const exportBtn = /** @type {HTMLButtonElement} */ (
+  document.getElementById('exportBtn')
+);
+const importBtn = /** @type {HTMLButtonElement} */ (
+  document.getElementById('importBtn')
+);
+const importFile = /** @type {HTMLInputElement} */ (
+  document.getElementById('importFile')
+);
 
 /**
  * Shows a status message to the user
@@ -187,4 +196,111 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Set up clickable code handlers
   setupClickableCodeHandlers();
+
+  // Set up export button handler
+  exportBtn.addEventListener('click', exportConfig);
+
+  // Set up import button handler
+  importBtn.addEventListener('click', () => importFile.click());
+  importFile.addEventListener('change', importConfig);
 });
+
+/**
+ * Exports the current configuration to a JSON file
+ */
+function exportConfig() {
+  const config = {
+    format: {
+      single: singleClickElement.value,
+      double: doubleClickElement.value,
+      triple: tripleClickElement.value,
+    }
+  };
+
+  const jsonString = JSON.stringify(config, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const timestamp = `${year}${month}${day}-${hours}${minutes}`;
+  const filename = `copy-title-url-config-${timestamp}.json`;
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showStatusMessage('Configuration exported successfully!');
+}
+
+/**
+ * Imports configuration from a JSON file
+ */
+async function importConfig() {
+  const file = importFile.files?.[0];
+  if (!file) {
+    showStatusMessage('No file selected for import.', true);
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      const content = event.target?.result;
+      if (typeof content !== 'string') {
+        showStatusMessage('Error reading file content.', true);
+        return;
+      }
+      const importedConfig = JSON.parse(content);
+
+      // Validate the imported configuration
+      if (
+        !importedConfig.format ||
+        typeof importedConfig.format !== 'object' ||
+        typeof importedConfig.format.single !== 'string' ||
+        typeof importedConfig.format.double !== 'string' ||
+        typeof importedConfig.format.triple !== 'string'
+      ) {
+        showStatusMessage(
+          'Invalid configuration file format. Make sure it includes a `format` object with `single`, `double`, and `triple` string properties.',
+          true
+        );
+        importFile.value = ''; // Reset file input
+        return;
+      }
+
+      // Update textareas
+      singleClickElement.value = importedConfig.format.single;
+      doubleClickElement.value = importedConfig.format.double;
+      tripleClickElement.value = importedConfig.format.triple;
+
+      // Save the new settings
+      await saveFormats(); // saveFormats already shows a success message
+      showStatusMessage('Configuration imported and saved successfully!');
+    } catch (error) {
+      console.error('Error importing configuration:', error);
+      showStatusMessage(
+        `Error importing configuration: ${error.message}. Please ensure the file is a valid JSON.`,
+        true
+      );
+    } finally {
+      // Reset the file input so the same file can be selected again if needed
+      importFile.value = '';
+    }
+  };
+
+  reader.onerror = () => {
+    showStatusMessage('Error reading the selected file.', true);
+    importFile.value = ''; // Reset file input
+  };
+
+  reader.readAsText(file);
+}
