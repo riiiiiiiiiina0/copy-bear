@@ -23,10 +23,10 @@ chrome.storage.local.get([storageKey], (result) => {
   if (customUrl) {
     urlDisplay.textContent = customUrl;
     launchButton.addEventListener('click', () => {
-      window.open(customUrl, '_blank');
+      window.location.href = customUrl;
       setTimeout(() => {
         window.close();
-      }, 5000);
+      }, 200); // Close after a short delay
     });
 
     // Clear the URL from storage once it's been retrieved and set
