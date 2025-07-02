@@ -345,6 +345,18 @@
     </div>
 
     <form id="optionsForm">
+      <div class="variables">
+        <h4>Keyboard Shortcut:</h4>
+        <p>
+          The default keyboard shortcut to activate the extension is
+          <code><span id="shortcut-key"></span>+Shift+1</code>.
+        </p>
+        <p>
+          You can customize this shortcut by visiting
+          <a href="chrome://extensions/shortcuts" target="_blank">chrome://extensions/shortcuts</a>.
+        </p>
+      </div>
+
       <table class="config-table">
         <thead>
           <tr>
@@ -388,6 +400,15 @@
   </div>
 
   <script src="options.js"></script>
+  <script>
+    // Detect OS and display appropriate shortcut key
+    const shortcutKeySpan = document.getElementById('shortcut-key');
+    if (navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
+      shortcutKeySpan.textContent = 'Cmd';
+    } else {
+      shortcutKeySpan.textContent = 'Ctrl';
+    }
+  </script>
 </body>
 
 </html>
