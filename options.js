@@ -187,4 +187,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Set up clickable code handlers
   setupClickableCodeHandlers();
+
+  // Detect OS and display appropriate shortcut key
+  const shortcutKeySpan = document.getElementById('shortcut-key');
+  if (shortcutKeySpan) {
+    if (navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
+      shortcutKeySpan.textContent = 'Cmd';
+    } else {
+      shortcutKeySpan.textContent = 'Ctrl';
+    }
+  }
 });
