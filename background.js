@@ -103,6 +103,26 @@ async function openUrl(url) {
 }
 
 /**
+ * Gets the selected text from the current tab
+ * @param {number} tabId - The ID of the tab to get selected text from
+ * @returns {Promise<string>} Promise that resolves to the selected text (empty string if none)
+ */
+async function getSelectedText(tabId) {
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      func: () => {
+        return window.getSelection().toString();
+      },
+    });
+    return results[0]?.result || '';
+  } catch (error) {
+    console.error('Failed to get selected text:', error);
+    return '';
+  }
+}
+
+/**
  * Performs the action (copy or open URL) using the user's custom format with auto-detected action.
  *
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL.
@@ -114,6 +134,12 @@ async function openUrl(url) {
 async function performClickAction(tab, clickType) {
   const title = tab.title || '';
   const url = tab.url || '';
+  let selectedText = '';
+
+  // Get selected text if the format includes <quote> template
+  if (tab.id) {
+    selectedText = await getSelectedText(tab.id);
+  }
 
   try {
     const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
@@ -132,12 +158,14 @@ async function performClickAction(tab, clickType) {
       // For open action, URL encode the title to handle special characters
       formattedText = format
         .replaceAll('<title>', encodeURIComponent(title))
-        .replaceAll('<url>', encodeURIComponent(url));
+        .replaceAll('<url>', encodeURIComponent(url))
+        .replaceAll('<quote>', encodeURIComponent(selectedText));
     } else {
       // For copy action, use plain text
       formattedText = format
         .replaceAll('<title>', title || '')
-        .replaceAll('<url>', url || '');
+        .replaceAll('<url>', url || '')
+        .replaceAll('<quote>', selectedText || '');
     }
 
     if (isUrlAction) {
