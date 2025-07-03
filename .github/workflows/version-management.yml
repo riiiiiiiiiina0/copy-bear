@@ -32,10 +32,17 @@ jobs:
         current_version=$(node -p "require('./manifest.json').version")
         echo "Current version: $current_version"
         
-        # Parse version and bump minor
-        IFS='.' read -r major minor <<< "$current_version"
+        # Parse version components (handle both major.minor and major.minor.patch)
+        IFS='.' read -r major minor patch <<< "$current_version"
+        
+        # Always bump minor version and keep patch if it exists
         new_minor=$((minor + 1))
-        new_version="$major.$new_minor"
+        if [ -n "$patch" ]; then
+          new_version="$major.$new_minor.$patch"
+        else
+          new_version="$major.$new_minor"
+        fi
+        
         echo "New version: $new_version"
         
         # Update manifest.json
