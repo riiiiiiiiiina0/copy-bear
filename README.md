@@ -1,4 +1,4 @@
-# Copy Title & URL Chrome Extension
+# 📋 Copy Title & URL Chrome Extension
 
 A powerful Chrome extension that copies the current tab's title and URL to your clipboard or opens URLs with single, double, or triple clicks in customizable formats.
 
