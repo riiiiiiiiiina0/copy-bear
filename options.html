@@ -2,408 +2,188 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Copy Title & URL - Options</title>
-  <style>
-    :root {
-      /* Light mode colors */
-      --bg-color: #f5f5f5;
-      --container-bg: #ffffff;
-      --text-color: #333333;
-      --text-muted: #efefef;
-      --border-color: #ddd;
-      --border-light: #e0e0e0;
-      --primary-color: #4CAF50;
-      --primary-hover: #45a049;
-      --danger-color: #f44336;
-      --danger-hover: #da190b;
-      --input-bg: #ffffff;
-      --input-border: #ddd;
-      --input-focus-border: #4CAF50;
-      --table-stripe: #f9f9f9;
-      --shadow: rgba(0, 0, 0, 0.1);
-      --success-bg: #d4edda;
-      --success-text: #155724;
-      --success-border: #c3e6cb;
-      --error-bg: #f8d7da;
-      --error-text: #721c24;
-      --error-border: #f5c6cb;
-      --info-bg: #e7f3ff;
-      --info-text: #0066cc;
-      --code-bg: #f0f0f0;
-    }
-
-    @media (prefers-color-scheme: dark) {
-      :root {
-        /* Dark mode colors */
-        --bg-color: #1a1a1a;
-        --container-bg: #2d2d2d;
-        --text-color: #e0e0e0;
-        --text-muted: #efefef;
-        --border-color: #404040;
-        --border-light: #4a4a4a;
-        --primary-color: #66bb6a;
-        --primary-hover: #5cb85c;
-        --danger-color: #ef5350;
-        --danger-hover: #f44336;
-        --input-bg: #3a3a3a;
-        --input-border: #555555;
-        --input-focus-border: #66bb6a;
-        --table-stripe: #353535;
-        --shadow: rgba(0, 0, 0, 0.3);
-        --success-bg: #1b5e20;
-        --success-text: #c8e6c9;
-        --success-border: #2e7d32;
-        --error-bg: #c62828;
-        --error-text: #ffcdd2;
-        --error-border: #d32f2f;
-        --info-bg: #0d47a1;
-        --info-text: #bbdefb;
-        --code-bg: #404040;
-      }
-    }
-
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Copy Title &amp; URL - Options</title>
+  <script src="./libs/tailwindcss-3.4.16.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+  <style type="text/tailwindcss">
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      transition: background-color 0.3s ease, color 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* bg-slate-50 */
+        }
+    /* Custom styles for status messages */
+    .status-message-base {
+        position: fixed;
+        top: 1rem; /* top-4 */
+        right: 1rem; /* right-4 */
+        padding: 1rem; /* p-4 */
+        border-radius: 0.5rem; /* rounded-lg */
+        font-weight: 500; /* font-medium */
+        z-index: 50;
+        display: none; /* Initially hidden */
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+        transition: all 0.3s ease-in-out;
     }
-
-    .container {
-      background: var(--container-bg);
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px var(--shadow);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    .status-message-success {
+        background-color: #d1fae5; /* bg-green-100 */
+        color: #065f46; /* text-green-800 */
+        border: 1px solid #6ee7b7; /* border-green-300 */
     }
-
-    h1 {
-      color: var(--text-color);
-      margin-bottom: 20px;
-      border-bottom: 2px solid var(--primary-color);
-      padding-bottom: 10px;
-      transition: color 0.3s ease, border-color 0.3s ease;
+    .status-message-error {
+        background-color: #fee2e2; /* bg-red-100 */
+        color: #991b1b; /* text-red-800 */
+        border: 1px solid #fca5a5; /* border-red-300 */
     }
-
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-      color: var(--text-color);
-      transition: color 0.3s ease;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid var(--input-border);
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      resize: vertical;
-      min-height: 60px;
-      box-sizing: border-box;
-      background-color: var(--input-bg);
-      color: var(--text-color);
-      transition: all 0.3s ease;
-    }
-
-    textarea:focus {
-      outline: none;
-      border-color: var(--input-focus-border);
-      box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
-    }
-
-    .buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 30px;
-    }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-
-    .save-btn {
-      background-color: var(--primary-color);
-      color: white;
-    }
-
-    .save-btn:hover {
-      background-color: var(--primary-hover);
-    }
-
-    .reset-btn {
-      background-color: var(--danger-color);
-      color: white;
-    }
-
-    .reset-btn:hover {
-      background-color: var(--danger-hover);
-    }
-
-    .status-message {
-      margin-top: 15px;
-      padding: 10px;
-      border-radius: 4px;
-      font-weight: 500;
-      display: none;
-      transition: all 0.3s ease;
-    }
-
-    .status-message.success {
-      background-color: var(--success-bg);
-      color: var(--success-text);
-      border: 1px solid var(--success-border);
-    }
-
-    .status-message.error {
-      background-color: var(--error-bg);
-      color: var(--error-text);
-      border: 1px solid var(--error-border);
-    }
-
-    .variables {
-      background-color: var(--info-bg);
-      padding: 15px;
-      border-radius: 4px;
-      margin-bottom: 20px;
-      transition: background-color 0.3s ease;
-    }
-
-    .variables h4 {
-      margin-top: 0;
-      color: var(--info-text);
-      transition: color 0.3s ease;
-    }
-
-    .variables ul {
-      margin-bottom: 0;
-    }
-
-    .variables li {
-      margin-bottom: 5px;
-      color: var(--text-color);
-      transition: color 0.3s ease;
-    }
-
-    .variables code {
-      background-color: var(--code-bg);
-      padding: 2px 4px;
-      border-radius: 2px;
-      font-family: 'Courier New', monospace;
-      color: var(--text-color);
-      transition: all 0.3s ease;
-    }
-
-    .variables code.clickable {
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.2s ease;
-    }
-
-    .variables code.clickable:hover {
-      background-color: var(--primary-color);
-      color: white;
-      border-color: var(--primary-color);
-      transform: translateY(-1px);
-    }
-
-    .variables code.clickable:active {
-      transform: translateY(0);
-    }
-
-
-
-    .config-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-      background-color: var(--container-bg);
-      border-radius: 8px;
-      box-shadow: 0 2px 10px var(--shadow);
-      overflow: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .config-table th {
-      background-color: var(--primary-color);
-      color: white;
-      padding: 15px;
-      text-align: left;
-      font-weight: 600;
-      font-size: 16px;
-    }
-
-    .config-table td {
-      padding: 20px;
-      border-bottom: 1px solid var(--border-light);
-      vertical-align: top;
-      background-color: var(--container-bg);
-      transition: all 0.3s ease;
-    }
-
-    .config-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .config-table tr:nth-child(even) td {
-      background-color: var(--table-stripe);
-    }
-
-    .click-type {
-      font-weight: 600;
-      color: var(--text-color);
-      min-width: 120px;
-      transition: color 0.3s ease;
-    }
-
-    .format-cell {
-      width: 100%;
-    }
-
-    .format-cell textarea {
-      margin-bottom: 10px;
-    }
-
-    .format-description {
-      font-size: 12px;
-      font-weight: 400;
-      color: var(--text-muted);
-      font-style: italic;
-      margin-top: 5px;
-      transition: color 0.3s ease;
-    }
-
-    @media (max-width: 768px) {
-      body {
-        max-width: 100%;
-        padding: 10px;
-      }
-
-      .config-table {
-        font-size: 14px;
-      }
-
-      .config-table th,
-      .config-table td {
-        padding: 10px;
-      }
-
-      .click-type {
-        min-width: 80px;
-      }
-    }
-  </style>
+    </style>
 </head>
 
-<body>
-  <div class="container">
-    <h1>📋 Copy Title & URL - Options</h1>
-
-    <div class="variables">
-      <h4>Available Variables:</h4>
-      <ul>
-        <li><code>&lt;title&gt;</code> - The page title</li>
-        <li><code>&lt;url&gt;</code> - The page URL</li>
-      </ul>
-      <br />
-      <h4>Action Types (Auto-detected):</h4>
-      <ul>
-        <li><strong>Copy to Clipboard:</strong> Used when format doesn't start with a URL scheme (http://, https://,
-          etc.)</li>
-        <li><strong>Open URL:</strong> Used automatically when format starts with a URL scheme (e.g.,
-          https://example.com/search?q=&lt;title&gt;)</li>
-      </ul>
-      <br />
-      <h4>Examples:</h4>
-      <div style="font-size: 13px; color: var(--info-text); margin-bottom: 8px;">
-        <em>Tip: Click any example below to copy it to your clipboard.</em>
+<body class="p-4 sm:p-6 lg:p-8">
+  <div class="max-w-6xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+    <header class="flex items-center mb-8 pb-6 border-b border-gray-200">
+      <span class="material-icons-outlined text-blue-600 text-4xl mr-4">
+        link
+      </span>
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Copy Title &amp; URL</h1>
+        <p class="text-gray-500">Extension Options</p>
       </div>
-      <ul>
-        <li><strong>Markdown:</strong> <code class="clickable" data-copy="[&lt;title&gt;](&lt;url&gt;)"
-            title="Click to copy">[&lt;title&gt;](&lt;url&gt;)</code></li>
-        <li><strong>Search with ChatGPT:</strong> <code class="clickable"
-            data-copy="https://chatgpt.com?hint=search&q=Summarize%20&lt;url&gt;"
-            title="Click to copy">https://chatgpt.com?hint=search&q=Summarize%20&lt;url&gt;</code>
-        </li>
-        <li><strong>Launch macOS Shortcuts:</strong> <code class="clickable"
-            data-copy="shortcuts://run-shortcut?name=Test&input=foo"
-            title="Click to copy">shortcuts://run-shortcut?name=Test&input=foo</code></li>
-      </ul>:
+    </header>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <aside class="lg:col-span-1 space-y-8">
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-gray-500 mr-2">code</span>
+            Available Variables
+          </h2>
+          <ul class="space-y-2 text-gray-600">
+            <li class="flex items-center">
+              <code class="bg-blue-100 text-blue-800 font-mono px-2 py-1 rounded-md text-sm">&lt;title&gt;</code>
+              <span class="ml-2">- The page title</span>
+            </li>
+            <li class="flex items-center">
+              <code class="bg-blue-100 text-blue-800 font-mono px-2 py-1 rounded-md text-sm">&lt;url&gt;</code>
+              <span class="ml-2">- The page URL</span>
+            </li>
+          </ul>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-gray-500 mr-2">help_outline</span>
+            How it Works
+          </h2>
+          <div class="space-y-4 text-gray-600">
+            <div>
+              <h3 class="font-semibold text-gray-700">Action Types:</h3>
+              <ul class="list-disc list-inside mt-2 space-y-1">
+                <li>
+                  <strong>Copy to Clipboard:</strong>
+                  Default action.
+                </li>
+                <li>
+                  <strong>Open URL:</strong>
+                  Activates if format starts with a URL scheme (e.g., `https://`).
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-700">Keyboard Shortcut:</h3>
+              <p class="mt-1">Activate with
+                <kbd id="shortcut-key" class="bg-gray-200 text-gray-800 px-2 py-1 rounded-md font-mono text-sm">Cmd+Shift+1</kbd>.
+                Customize at
+                <a class="text-blue-600 hover:text-blue-700 hover:underline"
+                  href="chrome://extensions/shortcuts">chrome://extensions/shortcuts</a>.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <span class="material-icons-outlined text-gray-500 mr-2">lightbulb</span>
+            Examples
+          </h2>
+          <p class="text-gray-500 mb-4 text-sm">Tip: Click any example to copy it.</p>
+          <ul class="space-y-3 text-gray-600">
+            <li>
+              <strong>Markdown:</strong><br />
+              <code data-copy="[&lt;title&gt;](&lt;url&gt;)"
+                class="bg-blue-100 text-blue-800 px-2 py-1 rounded-md cursor-pointer inline-block mt-1 font-mono text-sm clickable">[&lt;title&gt;](&lt;url&gt;)</code>
+            </li>
+            <li>
+              <strong>Search with ChatGPT:</strong><br />
+              <code data-copy="https://chatgpt.com/hint-search?q=Summarize%20&lt;url&gt;"
+                class="bg-blue-100 text-blue-800 px-2 py-1 rounded-md cursor-pointer inline-block mt-1 font-mono text-sm clickable">https://chatgpt.com/hint-search?q=Summarize%20&lt;url&gt;</code>
+            </li>
+            <li>
+              <strong>Launch macOS Shortcuts:</strong><br />
+              <code data-copy="shortcuts://run-shortcut?name=TestInput-foo"
+                class="bg-blue-100 text-blue-800 px-2 py-1 rounded-md cursor-pointer inline-block mt-1 font-mono text-sm clickable">shortcuts://run-shortcut?name=TestInput-foo</code>
+            </li>
+          </ul>
+        </div>
+      </aside>
+      <main class="lg:col-span-2">
+        <div class="bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-6 mb-8">
+          <h2 class="text-xl font-bold flex items-center">
+            <span class="material-icons-outlined mr-2">tune</span>Format Templates
+          </h2>
+          <p class="mt-1">Define the copy format for single, double, and triple clicks on the extension icon.
+          </p>
+        </div>
+        <form id="optionsForm">
+          <div class="space-y-8">
+            <div>
+              <label class="block text-lg font-medium text-gray-800 mb-2" for="single-click">Single
+                Click</label>
+              <textarea
+                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out font-mono text-sm shadow-sm"
+                id="single-click" name="singleClickFormat" rows="3" placeholder="<title>\n<url>"></textarea>
+            </div>
+            <div>
+              <label class="block text-lg font-medium text-gray-800 mb-2" for="double-click">Double
+                Click</label>
+              <textarea
+                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out font-mono text-sm shadow-sm"
+                id="double-click" name="doubleClickFormat" rows="3" placeholder="[<title>](<url>)"></textarea>
+            </div>
+            <div>
+              <label class="block text-lg font-medium text-gray-800 mb-2" for="triple-click">Triple
+                Click</label>
+              <textarea
+                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out font-mono text-sm shadow-sm"
+                id="triple-click" name="tripleClickFormat"
+                rows="3" placeholder="<title>"></textarea>
+            </div>
+          </div>
+          <div class="mt-10 pt-6 border-t border-gray-200 flex flex-wrap gap-4 justify-end">
+            <button type="button" id="exportBtn"
+              class="flex items-center justify-center gap-2 flex-1 sm:flex-none px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-all duration-150 ease-in-out">
+              <span class="material-icons-outlined">file_download</span>
+              Export
+            </button>
+            <button type="button" id="importBtn"
+              class="flex items-center justify-center gap-2 flex-1 sm:flex-none px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 transition-all duration-150 ease-in-out">
+              <span class="material-icons-outlined">file_upload</span>
+              Import
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display: none;">
+            <button type="button" id="resetBtn"
+              class="flex items-center justify-center gap-2 flex-1 sm:flex-none px-5 py-2.5 bg-red-500 text-white font-semibold rounded-lg shadow-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400 transition-all duration-150 ease-in-out">
+              <span class="material-icons-outlined">restart_alt</span>
+              Reset
+            </button>
+            <button type="submit" id="saveBtn"
+              class="flex items-center justify-center gap-2 flex-1 sm:flex-none px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-150 ease-in-out">
+              <span class="material-icons-outlined">save</span>
+              Save Settings
+            </button>
+          </div>
+        </form>
+      </main>
     </div>
-
-    <form id="optionsForm">
-      <div class="variables">
-        <h4>Keyboard Shortcut:</h4>
-        <p>
-          The default keyboard shortcut to activate the extension is
-          <code><span id="shortcut-key"></span>+Shift+1</code>.
-          Activating the extension with the shortcut is the same as clicking the extension icon.
-          You can press the shortcut multiple times quickly to simulate double-clicking or triple-clicking the icon.
-        </p>
-        <p>
-          You can customize this shortcut by visiting
-          <a href="chrome://extensions/shortcuts" target="_blank">chrome://extensions/shortcuts</a>.
-        </p>
-      </div>
-
-      <table class="config-table">
-        <thead>
-          <tr>
-            <th>Click Type</th>
-            <th>
-              Format Template
-              <div class="format-description">This format will be used when you single-click the extension icon. Start
-                with a URL scheme (http://, https://, etc.) to open as URL, otherwise will copy to clipboard.</div>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="click-type">Single Click</td>
-            <td class="format-cell">
-              <textarea id="singleClickFormat" name="singleClickFormat" placeholder="<title>\n<url>"></textarea>
-            </td>
-          </tr>
-          <tr>
-            <td class="click-type">Double Click</td>
-            <td class="format-cell">
-              <textarea id="doubleClickFormat" name="doubleClickFormat" placeholder="[<title>](<url>)"></textarea>
-            </td>
-          </tr>
-          <tr>
-            <td class="click-type">Triple Click</td>
-            <td class="format-cell">
-              <textarea id="tripleClickFormat" name="tripleClickFormat" placeholder="<title>"></textarea>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="buttons">
-        <button type="submit" class="save-btn">Save Settings</button>
-        <button type="button" id="resetBtn" class="reset-btn">Reset to Defaults</button>
-        <button type="button" id="exportBtn" class="save-btn" style="background-color: #2196F3;">Export Config</button>
-        <button type="button" id="importBtn" class="save-btn" style="background-color: #FF9800;">Import Config</button>
-        <input type="file" id="importFile" accept=".json" style="display: none;">
-      </div>
-    </form>
-
-    <div id="statusMessage" class="status-message"></div>
   </div>
-
+  <div id="statusMessage" class="status-message-base"></div>
   <script src="options.js"></script>
 </body>
 
