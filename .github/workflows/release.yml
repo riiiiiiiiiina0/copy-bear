@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          # We need to fetch all history and branches for git commands to work correctly
+          fetch-depth: 0
+          # This is needed to push to the main branch
+          token: ${{ secrets.PAT_FOR_BUMP_VERSION }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Bump version
+        run: |
+          # Read current version
+          current_version=$(jq -r .version manifest.json)
+          # Increment minor version
+          new_version=$(echo $current_version | awk -F. '{$2 = $2 + 1; print $1 FS $2}')
+          # Update manifest.json
+          jq ".version = \"$new_version\"" manifest.json > manifest.json.tmp && mv manifest.json.tmp manifest.json
+          echo "New version: $new_version"
+          # Set an output for the next job
+          echo "::set-output name=new_version::$new_version"
+        id: bump
+
+      - name: Commit and push changes
+        run: |
+          git add manifest.json
+          git commit -m "Bump version to ${{ steps.bump.outputs.new_version }}"
+          git push
+
+  create_release:
+    runs-on: ubuntu-latest
+    needs: bump_version
+    # Only run if bump_version job was successful and new_version output is set
+    if: needs.bump_version.outputs.new_version
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get new version
+        # Get the new version from the bump_version job output
+        # This is a bit of a workaround as the manifest.json in this checkout will be the old one
+        # A more robust solution might involve passing artifacts or directly using the output
+        run: echo "NEW_VERSION=${{ needs.bump_version.outputs.new_version }}" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.NEW_VERSION }}
+          release_name: Release ${{ env.NEW_VERSION }}
+          draft: false
+          prerelease: false
