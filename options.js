@@ -10,7 +10,7 @@
  */
 const DEFAULT_FORMATS = {
   // Format templates (action is auto-detected based on URL scheme)
-  singleClickFormat: '<title>\\n<url>', // Maintained original default
+  singleClickFormat: '<title>\n<url>', // Maintained original default
   doubleClickFormat: '[<title>](<url>)', // Maintained original default
   tripleClickFormat: '<title>', // Maintained original default
 };

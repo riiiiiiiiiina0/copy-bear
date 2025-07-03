@@ -118,7 +118,10 @@ async function performClickAction(tab, clickType) {
   try {
     const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
     const formatKey = `${clickType}ClickFormat`;
-    const format = result[formatKey] || FALLBACK_FORMATS[formatKey] || '';
+    let format = result[formatKey] || FALLBACK_FORMATS[formatKey] || '';
+
+    // Replace literal '\n' (from user input) with actual newline characters
+    format = format.replace(/\\n/g, '\n');
 
     // Auto-detect action based on format template
     const isUrlAction = isUrlFormat(format);
