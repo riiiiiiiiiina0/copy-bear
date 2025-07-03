@@ -105,102 +105,154 @@ async function openUrl(url) {
 /**
  * Performs the action (copy or open URL) using the user's custom format with auto-detected action.
  *
- * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL.
+ * @param {chrome.tabs.Tab[]} tabs - An array of active tab objects.
  * @param {string} clickType - The click type ('single', 'double', 'triple').
  * @returns {Promise<void>} Promise that resolves when the operation is complete.
- * @description Gets the user's format from storage, applies the format to the current tab's title, URL, and selected text (quote),
+ * @description Gets the user's format from storage, applies the format to each tab's title, URL, and selected text (quote),
  * and performs the action (copy or open) based on whether the format starts with a URL scheme.
  */
-async function performClickAction(tab, clickType) {
-  const title = tab.title || '';
-  const url = tab.url || '';
-  let quote = '';
-
-  // Get selected text
-  try {
-    const selectionResult = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => window.getSelection().toString(),
-    });
-    if (selectionResult && selectionResult.length > 0 && selectionResult[0].result) {
-      quote = selectionResult[0].result.trim();
-    }
-  } catch (e) {
-    console.warn('Could not retrieve selected text:', e);
-    // Proceed without selected text if there's an error (e.g., on pages where content scripts can't run)
+async function performClickAction(tabs, clickType) {
+  if (!tabs || tabs.length === 0) {
+    console.warn('No tabs provided for click action.');
+    showBadgeText('⚠️', true);
+    return;
   }
 
   try {
     const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
     const formatKey = `${clickType}ClickFormat`;
-    let format = result[formatKey] || FALLBACK_FORMATS[formatKey] || '';
+    let formatTemplate = result[formatKey] || FALLBACK_FORMATS[formatKey] || '';
 
-    // Replace literal '\n' (from user input) with actual newline characters
-    format = format.replace(/\\n/g, '\n');
+    // Replace literal '\n' (from user input) with actual newline characters in the template
+    formatTemplate = formatTemplate.replace(/\\n/g, '\n');
 
-    // Auto-detect action based on format template
-    const isUrlAction = isUrlFormat(format);
+    const isUrlAction = isUrlFormat(formatTemplate);
+    let textsToCopy = [];
+    let urlsToOpen = [];
 
-    // Apply different replacements based on action type
-    let formattedText;
-    if (isUrlAction) {
-      // For open action, URL encode the title, URL, and quote to handle special characters
-      formattedText = format
-        .replaceAll('<title>', encodeURIComponent(title))
-        .replaceAll('<url>', encodeURIComponent(url))
-        .replaceAll('<quote>', encodeURIComponent(quote));
-    } else {
-      // For copy action, use plain text
-      formattedText = format
-        .replaceAll('<title>', title || '')
-        .replaceAll('<url>', url || '')
-        .replaceAll('<quote>', quote || '');
+    for (const tab of tabs) {
+      const title = tab.title || '';
+      const url = tab.url || '';
+      let quote = '';
+
+      // Get selected text for the current tab
+      // Note: executeScript works on the active tab by default if tabId is not specified in target.
+      // However, to ensure it works for each highlighted tab, we must specify the tabId.
+      // This might only work if the script is triggered from a context that has access to that specific tab.
+      // For highlighted tabs that are not the *active* one, getting selected text might be problematic
+      // or require additional permissions/manifest changes. For now, we assume it works or gracefully degrades.
+      if (tab.id) {
+        try {
+          const selectionResult = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: () => window.getSelection().toString(),
+          });
+          if (selectionResult && selectionResult.length > 0 && selectionResult[0].result) {
+            quote = selectionResult[0].result.trim();
+          }
+        } catch (e) {
+          console.warn(`Could not retrieve selected text for tab ${tab.id}:`, e);
+          // Proceed without selected text for this tab
+        }
+      }
+
+      let formattedText;
+      if (isUrlAction) {
+        // For open action, URL encode the title, URL, and quote
+        formattedText = formatTemplate
+          .replaceAll('<title>', encodeURIComponent(title))
+          .replaceAll('<url>', encodeURIComponent(url))
+          .replaceAll('<quote>', encodeURIComponent(quote));
+        urlsToOpen.push(formattedText.trim());
+      } else {
+        // For copy action, use plain text
+        formattedText = formatTemplate
+          .replaceAll('<title>', title)
+          .replaceAll('<url>', url)
+          .replaceAll('<quote>', quote);
+        textsToCopy.push(formattedText.trim());
+      }
     }
 
-    const finalText = formattedText.trim();
-
     if (isUrlAction) {
-      // For open action, treat the formatted text as a URL
-      await openUrl(finalText);
+      let openedAtLeastOne = false;
+      for (const urlToOpen of urlsToOpen) {
+        await openUrl(urlToOpen); // openUrl shows its own badge ('🔗' or '⤴️' or '⚠️')
+        openedAtLeastOne = true;
+      }
+      if (openedAtLeastOne) {
+        // If at least one URL was processed by openUrl, ensure a consistent '🔗' badge is shown,
+        // potentially overriding individual badges from openUrl if multiple URLs are opened quickly.
+        // openUrl itself calls showBadgeText. If urlsToOpen is > 1, this provides a summary.
+        // If only one, it might be redundant but ensures the requested '🔗'.
+        // However, openUrl also handles custom protocols with '⤴️'.
+        // The original request was "all show the same badge text 🔗 would be enough".
+        // This implies overriding the '⤴️' from openUrl for custom protocols in multi-open case.
+        // For simplicity and to adhere to the request, we'll just show '🔗' if any URL was processed.
+        // The individual `openUrl` calls will still show their specific badges briefly.
+        // This simplified line below might be sufficient if openUrl's badges are acceptable.
+        // The user specifically asked for "all show the same badge text 🔗", so if openUrl shows '⤴️',
+        // we might need to explicitly set '🔗' after the loop if `urlsToOpen.length > 0`.
+        if (urlsToOpen.length > 0) {
+            showBadgeText('🔗');
+        }
+      } else if (tabs.length > 0) { // No URLs could be processed, but there were tabs
+        showBadgeText('⚠️', true);
+      }
     } else {
-      // Default to copy action
-      if (tab.id) {
-        await copyToClipboard(tab.id, finalText);
+      if (textsToCopy.length > 0) {
+        const combinedText = textsToCopy.join('\n\n'); // Separate entries with a double newline
+        // Use the first tab's ID for the copyToClipboard context, if available.
+        // This is a limitation as executeScript needs a specific tab context.
+        // Ideally, clipboard writing should happen directly in the service worker if possible,
+        // but navigator.clipboard is not available there.
+        const firstTabId = tabs[0].id;
+        if (firstTabId) {
+          await copyToClipboard(firstTabId, combinedText);
+          // copyToClipboard will trigger a message for badge update
+        } else {
+          console.error('Cannot copy text without a valid tab ID.');
+          showBadgeText('⚠️', true);
+        }
+      } else {
+        showBadgeText('⚠️', true); // Nothing to copy
       }
     }
   } catch (error) {
-    console.error(`Error performing ${clickType} click action:`, error);
+    console.error(`Error performing ${clickType} click action for multiple tabs:`, error);
+    showBadgeText('⚠️', true);
   }
 }
 
+
 /**
  * Performs single-click action using the user's custom single-click format
- * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
+ * @param {chrome.tabs.Tab[]} tabs - An array of tab objects.
  * @returns {Promise<void>} Promise that resolves when operation is complete
  * @description Gets user's single-click format from storage and applies it with auto-detected action
  */
-async function performSingleClickAction(tab) {
-  performClickAction(tab, 'single');
+async function performSingleClickAction(tabs) {
+  performClickAction(tabs, 'single');
 }
 
 /**
  * Performs double-click action using the user's custom double-click format
- * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
+ * @param {chrome.tabs.Tab[]} tabs - An array of tab objects.
  * @returns {Promise<void>} Promise that resolves when operation is complete
  * @description Gets user's double-click format from storage and applies it with auto-detected action
  */
-async function performDoubleClickAction(tab) {
-  performClickAction(tab, 'double');
+async function performDoubleClickAction(tabs) {
+  performClickAction(tabs, 'double');
 }
 
 /**
  * Performs triple-click action using the user's custom triple-click format
- * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL
+ * @param {chrome.tabs.Tab[]} tabs - An array of tab objects.
  * @returns {Promise<void>} Promise that resolves when operation is complete
  * @description Gets user's triple-click format from storage and applies it with auto-detected action
  */
-async function performTripleClickAction(tab) {
-  performClickAction(tab, 'triple');
+async function performTripleClickAction(tabs) {
+  performClickAction(tabs, 'triple');
 }
 
 /**
@@ -256,47 +308,82 @@ async function copyToClipboard(tabId, textToCopy) {
 
 /**
  * Registers a click handler with a delay, resetting clickCount after execution.
- * @param {(tab: chrome.tabs.Tab) => Promise<void>} fn - The function to execute, accepting a tab parameter.
- * @param {chrome.tabs.Tab} tab - The tab object to pass to the handler function.
+ * @param {(tabs: chrome.tabs.Tab[]) => Promise<void>} fn - The function to execute, accepting an array of tab parameters.
+ * @param {chrome.tabs.Tab[]} tabs - The array of tab objects to pass to the handler function.
  * @param {number} [delay=0] - The delay in milliseconds before executing the function.
  */
-const registerClick = (fn, tab, delay = 0) => {
+const registerClick = (fn, tabs, delay = 0) => {
   clickTimer = setTimeout(async () => {
-    await fn(tab);
-    clickCount = 0;
+    await fn(tabs);
+    clickCount = 0; // Reset click count after action is performed
   }, delay);
 };
 
 /**
- * Event listener for extension action button clicks
+ * Event listener for extension action button clicks.
  * Handles single, double, and triple-click detection to trigger different actions
- * @param {chrome.tabs.Tab} tab - The active tab when the action button was clicked
+ * for all highlighted (selected) tabs in the current window.
+ * @param {chrome.tabs.Tab} activeTab - The active tab when the action button was clicked.
+ *        While this is provided, we will query for all highlighted tabs.
  * @description
- * - Single click: Performs user-configured action with single-click format
- * - Double click: Performs user-configured action with double-click format
- * - Triple click: Performs user-configured action with triple-click format
- * Actions can be either copying to clipboard or opening a URL based on user configuration.
- * Uses a timer-based approach to distinguish between single, double, and triple clicks
+ * - Queries for all highlighted tabs in the current window.
+ * - Single click: Performs user-configured action with single-click format for selected tabs.
+ * - Double click: Performs user-configured action with double-click format for selected tabs.
+ * - Triple click: Performs user-configured action with triple-click format for selected tabs.
+ * Actions can be either copying to clipboard or opening URLs based on user configuration.
+ * Uses a timer-based approach to distinguish between single, double, and triple clicks.
  */
-chrome.action.onClicked.addListener(async (tab) => {
-  if (!tab.id) return;
+chrome.action.onClicked.addListener(async (activeTab) => {
+  // Query for all highlighted tabs in the current window
+  const highlightedTabs = await chrome.tabs.query({
+    highlighted: true,
+    currentWindow: true,
+  });
 
-  clickCount++;
-
-  // Clear the timer but don't execute yet - wait for potential double or triple click
-  clearTimeout(clickTimer);
-
-  if (clickCount === 1) {
-    registerClick(performSingleClickAction, tab, MULTI_CLICK_DELAY);
-  } else if (clickCount === 2) {
-    registerClick(performDoubleClickAction, tab, MULTI_CLICK_DELAY);
-  } else if (clickCount === 3) {
-    registerClick(performTripleClickAction, tab, 0);
-  } else {
-    // More than 3 clicks - reset counter
-    clickCount = 0;
+  if (!highlightedTabs || highlightedTabs.length === 0) {
+    // Fallback to active tab if no highlighted tabs found (should not happen if action is clicked)
+    // or if the query somehow fails, though chrome.tabs.query is robust.
+    // If activeTab itself doesn't have an ID (e.g. devtools window), then show error.
+    if (!activeTab || !activeTab.id) {
+        console.error('No valid tab found for action.');
+        showBadgeText('⚠️', true);
+        clickCount = 0; // Reset click count as the action cannot proceed
+        return;
+    }
+    // Proceed with just the active tab if it's valid
+    // This ensures that if a user clicks the extension on a page like chrome://extensions,
+    // it still attempts to use that single tab if it's the only one "highlighted" (implicitly).
+    performActionForTabs([activeTab]);
+    return;
   }
+
+  performActionForTabs(highlightedTabs);
 });
+
+
+/**
+ * Handles the click timing and dispatches action for the given tabs.
+ * @param {chrome.tabs.Tab[]} tabs - The array of tabs to perform the action on.
+ */
+function performActionForTabs(tabs) {
+    clickCount++;
+
+    // Clear the timer but don't execute yet - wait for potential double or triple click
+    clearTimeout(clickTimer);
+
+    if (clickCount === 1) {
+        registerClick(performSingleClickAction, tabs, MULTI_CLICK_DELAY);
+    } else if (clickCount === 2) {
+        registerClick(performDoubleClickAction, tabs, MULTI_CLICK_DELAY);
+    } else if (clickCount === 3) {
+        // For triple click, execute immediately (or after a very short delay if needed, though 0 is typical)
+        registerClick(performTripleClickAction, tabs, 0);
+        // clickCount is reset by registerClick's timeout
+    } else {
+        // More than 3 clicks - reset counter and effectively ignore this click train
+        clickCount = 0;
+    }
+}
 
 /**
  * Event listener for runtime messages from content scripts
