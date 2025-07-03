@@ -108,12 +108,27 @@ async function openUrl(url) {
  * @param {chrome.tabs.Tab} tab - The active tab object containing title and URL.
  * @param {string} clickType - The click type ('single', 'double', 'triple').
  * @returns {Promise<void>} Promise that resolves when the operation is complete.
- * @description Gets the user's format from storage, applies the format to the current tab's title and URL,
+ * @description Gets the user's format from storage, applies the format to the current tab's title, URL, and selected text (quote),
  * and performs the action (copy or open) based on whether the format starts with a URL scheme.
  */
 async function performClickAction(tab, clickType) {
   const title = tab.title || '';
   const url = tab.url || '';
+  let quote = '';
+
+  // Get selected text
+  try {
+    const selectionResult = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => window.getSelection().toString(),
+    });
+    if (selectionResult && selectionResult.length > 0 && selectionResult[0].result) {
+      quote = selectionResult[0].result.trim();
+    }
+  } catch (e) {
+    console.warn('Could not retrieve selected text:', e);
+    // Proceed without selected text if there's an error (e.g., on pages where content scripts can't run)
+  }
 
   try {
     const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
@@ -129,24 +144,28 @@ async function performClickAction(tab, clickType) {
     // Apply different replacements based on action type
     let formattedText;
     if (isUrlAction) {
-      // For open action, URL encode the title to handle special characters
+      // For open action, URL encode the title, URL, and quote to handle special characters
       formattedText = format
         .replaceAll('<title>', encodeURIComponent(title))
-        .replaceAll('<url>', encodeURIComponent(url));
+        .replaceAll('<url>', encodeURIComponent(url))
+        .replaceAll('<quote>', encodeURIComponent(quote));
     } else {
       // For copy action, use plain text
       formattedText = format
         .replaceAll('<title>', title || '')
-        .replaceAll('<url>', url || '');
+        .replaceAll('<url>', url || '')
+        .replaceAll('<quote>', quote || '');
     }
+
+    const finalText = formattedText.trim();
 
     if (isUrlAction) {
       // For open action, treat the formatted text as a URL
-      await openUrl(formattedText);
+      await openUrl(finalText);
     } else {
       // Default to copy action
       if (tab.id) {
-        await copyToClipboard(tab.id, formattedText);
+        await copyToClipboard(tab.id, finalText);
       }
     }
   } catch (error) {

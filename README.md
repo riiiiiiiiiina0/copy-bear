@@ -53,6 +53,7 @@ Use these variables in your custom format templates:
 
 - `<title>` - The page title
 - `<url>` - The page URL
+- `<quote>` - The selected text on the page
 
 ### Action Types
 
@@ -78,6 +79,7 @@ Opens the formatted text as a URL in a new tab. Perfect for:
 - **HTML link**: `<a href="<url>"><title></a>`
 - **Title only**: `<title>`
 - **Citation format**: `<title>. Retrieved from <url>`
+- **Quote with source**: `"<quote>" - <title> (<url>)`
 
 #### For Open URL Actions:
 
