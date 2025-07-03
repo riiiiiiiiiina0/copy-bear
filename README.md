@@ -11,9 +11,7 @@ A powerful Chrome extension that copies the current tab's title and URL to your 
 - 📝 **Dual Action Types**: Copy to clipboard OR open URL in new tab
 - 🔧 **Custom Templates**: Use variables like `<title>` and `<url>` in your formats
 - ⚙️ **Options Page**: Easy-to-use settings interface for complete customization
-- ✔️ Shows success/error feedback on extension icon badge
 - ⚡ Works directly from the extension icon - no popup required
-- 🎯 Smart click detection with 500ms multi-click window
 - 📱 Non-intrusive visual feedback that auto-disappears
 
 ## Installation
