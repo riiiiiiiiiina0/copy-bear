@@ -20,7 +20,7 @@ A powerful Chrome extension that copies the current tab's title and URL to your 
 
 ### Install from Chrome Web Store
 
-_Coming soon..._
+[Available on the Chrome Web Store](https://chromewebstore.google.com/detail/copy-title-url/hbklhjjjhdjmnbelfbijaenabkpmnbbe)
 
 ### Install Manually (Developer Mode)
 
