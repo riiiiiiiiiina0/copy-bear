@@ -53,6 +53,7 @@ Use these variables in your custom format templates:
 
 - `<title>` - The page title
 - `<url>` - The page URL
+- `<quote>` - Selected text content in the current tab
 
 ### Action Types
 
@@ -78,6 +79,8 @@ Opens the formatted text as a URL in a new tab. Perfect for:
 - **HTML link**: `<a href="<url>"><title></a>`
 - **Title only**: `<title>`
 - **Citation format**: `<title>. Retrieved from <url>`
+- **Quote with source**: `"<quote>"\n\nSource: <title> - <url>`
+- **Markdown quote**: `> <quote>\n\n[<title>](<url>)`
 
 #### For Open URL Actions:
 
@@ -85,6 +88,8 @@ Opens the formatted text as a URL in a new tab. Perfect for:
 - **Summarize with ChatGPT**: `https://chatgpt.com?q=Summarize this: <url>`
 - **Share on Twitter**: `https://twitter.com/intent/tweet?text=<title>&url=<url>`
 - **Save to Pocket**: `https://getpocket.com/save?url=<url>`
+- **Search selected text**: `https://google.com/search?q=<quote>`
+- **Analyze quote with AI**: `https://chatgpt.com?q=Analyze this quote: "<quote>" from <title>`
 
 ### Visual Feedback
 

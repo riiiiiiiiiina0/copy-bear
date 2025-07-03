@@ -168,6 +168,9 @@ async function performClickAction(tab, clickType) {
         .replaceAll('<quote>', selectedText || '');
     }
 
+    // Trim the formatted text to remove leading/trailing whitespace
+    formattedText = formattedText.trim();
+
     if (isUrlAction) {
       // For open action, treat the formatted text as a URL
       await openUrl(formattedText);
