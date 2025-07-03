@@ -4,28 +4,52 @@
  */
 
 /**
- * Default format configurations
- * @type {Object}
+ * @fileoverview Options page script for Copy Title & URL extension
+ * Handles saving and loading user preferences for copy formats
+ */
+
+/**
+ * Predefined format options
+ * @type {Object<string, {name: string, value: string}>}
  * @constant
  */
-const DEFAULT_FORMATS = {
-  // Format templates (action is auto-detected based on URL scheme)
-  singleClickFormat: '<title>\n<url>', // Maintained original default
-  doubleClickFormat: '[<title>](<url>)', // Maintained original default
-  tripleClickFormat: '<title>', // Maintained original default
+const PREDEFINED_FORMATS = {
+  title_url_2_lines: { name: 'Title and URL (2 lines)', value: '<title>\n<url>' },
+  title_url_1_line: { name: 'Title and URL (1 line)', value: '<title> - <url>' },
+  markdown: { name: 'Markdown', value: '[<title>](<url>)' },
+  custom: { name: 'Custom Format', value: '' }, // Custom value will be from textarea
 };
 
-// Updated element IDs
-const singleClickElement = /** @type {HTMLTextAreaElement} */ (
-  document.getElementById('single-click')
-);
-const doubleClickElement = /** @type {HTMLTextAreaElement} */ (
-  document.getElementById('double-click')
-);
-const tripleClickElement = /** @type {HTMLTextAreaElement} */ (
-  document.getElementById('triple-click')
-);
-const optionsForm = /** @type {HTMLFormElement} */ ( // Still needed for submit event
+/**
+ * Default format configurations (refers to keys in PREDEFINED_FORMATS)
+ * @type {Object<string, string>}
+ * @constant
+ */
+const DEFAULT_FORMAT_TYPES = {
+  singleClickFormatType: 'title_url_2_lines',
+  doubleClickFormatType: 'markdown',
+  tripleClickFormatType: 'title_url_1_line', // Example: changed default for triple
+};
+
+// Original default format values, still needed for reset and initial save if type isn't 'custom'
+const DEFAULT_FORMAT_VALUES = {
+  singleClickFormat: PREDEFINED_FORMATS.title_url_2_lines.value,
+  doubleClickFormat: PREDEFINED_FORMATS.markdown.value,
+  tripleClickFormat: PREDEFINED_FORMATS.title_url_1_line.value,
+};
+
+
+// Element selectors
+const clickTypes = ['single', 'double', 'triple'];
+const elements = {};
+
+clickTypes.forEach(type => {
+  elements[`${type}ClickTypeElement`] = /** @type {HTMLSelectElement} */ (document.getElementById(`${type}-click-type`));
+  elements[`${type}ClickCustomFormatElement`] = /** @type {HTMLTextAreaElement} */ (document.getElementById(`${type}-click-custom-format`));
+  elements[`${type}ClickFormatElement`] = /** @type {HTMLTextAreaElement} */ (document.getElementById(`${type}-click-format`));
+});
+
+const optionsForm = /** @type {HTMLFormElement} */ (
   document.getElementById('optionsForm')
 );
 const resetBtn = /** @type {HTMLButtonElement} */ (
@@ -42,6 +66,56 @@ const importFile = /** @type {HTMLInputElement} */ (
 );
 
 /**
+ * Populates a select element with predefined format options.
+ * @param {HTMLSelectElement} selectElement - The select element to populate.
+ */
+function populateFormatOptions(selectElement) {
+  if (!selectElement) return;
+  // Clear existing options
+  selectElement.innerHTML = '';
+  for (const key in PREDEFINED_FORMATS) {
+    const option = document.createElement('option');
+    option.value = key;
+    option.textContent = PREDEFINED_FORMATS[key].name;
+    selectElement.appendChild(option);
+  }
+}
+
+/**
+ * Updates the visibility of the custom format textarea based on select value.
+ * Also updates the main hidden format textarea.
+ * @param {string} type - The click type (e.g., 'single', 'double', 'triple').
+ */
+function updateTextareaVisibilityAndFormat(type) {
+  const typeElement = elements[`${type}ClickTypeElement`];
+  const customFormatElement = elements[`${type}ClickCustomFormatElement`];
+  const formatElement = elements[`${type}ClickFormatElement`];
+
+  if (!typeElement || !customFormatElement || !formatElement) return;
+
+  const selectedType = typeElement.value;
+
+  if (selectedType === 'custom') {
+    customFormatElement.style.display = 'block';
+    // When custom is selected, the formatElement's value will be taken from customFormatElement on save.
+    // For live update or if needed: formatElement.value = customFormatElement.value;
+  } else {
+    customFormatElement.style.display = 'none';
+    // Set the main format element's value to the selected predefined format's value
+    if (PREDEFINED_FORMATS[selectedType]) {
+      formatElement.value = PREDEFINED_FORMATS[selectedType].value;
+      // Optionally, clear or set default for the custom textarea when not in use
+      // customFormatElement.value = PREDEFINED_FORMATS[selectedType].value; // or some placeholder
+    }
+  }
+  // Ensure the hidden format element is updated when the custom textarea changes
+  if (selectedType === 'custom') {
+    formatElement.value = customFormatElement.value;
+  }
+}
+
+
+/**
  * Shows a status message to the user
  * @param {string} message - The message to display
  * @param {boolean} [isError=false] - Whether this is an error message
@@ -51,7 +125,6 @@ function showStatusMessage(message, isError = false) {
   if (!statusElement) return;
 
   statusElement.textContent = message;
-  // Tailwind classes are now managed in HTML, only add/remove specific ones
   statusElement.classList.remove(
     'status-message-success',
     'status-message-error'
@@ -63,7 +136,6 @@ function showStatusMessage(message, isError = false) {
   }
   statusElement.style.display = 'block';
 
-  // Hide the message after 3 seconds
   setTimeout(() => {
     if (statusElement) {
       statusElement.style.display = 'none';
@@ -76,24 +148,40 @@ function showStatusMessage(message, isError = false) {
  */
 async function loadSavedFormats() {
   try {
-    // Ensure default keys match what's used in saveFormats and chrome.storage.sync.get
-    const result = await chrome.storage.sync.get({
-      singleClickFormat: DEFAULT_FORMATS.singleClickFormat,
-      doubleClickFormat: DEFAULT_FORMATS.doubleClickFormat,
-      tripleClickFormat: DEFAULT_FORMATS.tripleClickFormat,
+    const itemsToGet = {};
+    clickTypes.forEach(type => {
+      itemsToGet[`${type}ClickFormatType`] = DEFAULT_FORMAT_TYPES[`${type}ClickFormatType`];
+      itemsToGet[`${type}ClickFormat`] = DEFAULT_FORMAT_VALUES[`${type}ClickFormat`];
     });
 
-    // Load formats
-    singleClickElement.value = result.singleClickFormat;
-    doubleClickElement.value = result.doubleClickFormat;
-    tripleClickElement.value = result.tripleClickFormat;
+    const result = await chrome.storage.sync.get(itemsToGet);
+
+    clickTypes.forEach(type => {
+      const typeElement = elements[`${type}ClickTypeElement`];
+      const customFormatElement = elements[`${type}ClickCustomFormatElement`];
+      const formatElement = elements[`${type}ClickFormatElement`];
+
+      const savedType = result[`${type}ClickFormatType`];
+      const savedFormat = result[`${type}ClickFormat`];
+
+      typeElement.value = savedType;
+      formatElement.value = savedFormat; // This is the actual format string
+
+      if (savedType === 'custom') {
+        customFormatElement.value = savedFormat; // Populate custom textarea if custom was saved
+      } else {
+        // If not custom, custom textarea can be cleared or show the predefined value for reference
+        // customFormatElement.value = PREDEFINED_FORMATS[savedType]?.value || '';
+        customFormatElement.value = ''; // Prefer to keep it clean
+      }
+      updateTextareaVisibilityAndFormat(type); // Ensure correct visibility
+    });
+
   } catch (error) {
     console.error('Error loading saved formats:', error);
     showStatusMessage('Error loading saved settings. Using defaults.', true);
     // Populate with defaults on error
-    singleClickElement.value = DEFAULT_FORMATS.singleClickFormat;
-    doubleClickElement.value = DEFAULT_FORMATS.doubleClickFormat;
-    tripleClickElement.value = DEFAULT_FORMATS.tripleClickFormat;
+    resetToDefaults(false); // Pass false to avoid loop if saveFormats in resetToDefaults also errors
   }
 }
 
@@ -102,19 +190,25 @@ async function loadSavedFormats() {
  */
 async function saveFormats() {
   try {
-    // Prepare the data to save using the correct keys for storage
-    const dataToSave = {
-      singleClickFormat:
-        singleClickElement.value.trim() || DEFAULT_FORMATS.singleClickFormat,
-      doubleClickFormat:
-        doubleClickElement.value.trim() || DEFAULT_FORMATS.doubleClickFormat,
-      tripleClickFormat:
-        tripleClickElement.value.trim() || DEFAULT_FORMATS.tripleClickFormat,
-    };
+    const dataToSave = {};
+    clickTypes.forEach(type => {
+      const typeElement = elements[`${type}ClickTypeElement`];
+      const customFormatElement = elements[`${type}ClickCustomFormatElement`];
+      // const formatElement = elements[`${type}ClickFormatElement`]; // We'll set this based on logic
 
-    // Save to Chrome storage
+      const selectedType = typeElement.value;
+      dataToSave[`${type}ClickFormatType`] = selectedType;
+
+      if (selectedType === 'custom') {
+        dataToSave[`${type}ClickFormat`] = customFormatElement.value.trim();
+      } else {
+        dataToSave[`${type}ClickFormat`] = PREDEFINED_FORMATS[selectedType]?.value || '';
+      }
+      // Update the hidden format element as well, though it's mostly for direct use by other parts if any.
+      elements[`${type}ClickFormatElement`].value = dataToSave[`${type}ClickFormat`];
+    });
+
     await chrome.storage.sync.set(dataToSave);
-
     showStatusMessage('Settings saved successfully!');
   } catch (error) {
     console.error('Error saving formats:', error);
@@ -124,15 +218,26 @@ async function saveFormats() {
 
 /**
  * Resets the form to default values and saves them
+ * @param {boolean} [shouldSave=true] - Whether to save after resetting.
  */
-async function resetToDefaults() {
-  singleClickElement.value = DEFAULT_FORMATS.singleClickFormat;
-  doubleClickElement.value = DEFAULT_FORMATS.doubleClickFormat;
-  tripleClickElement.value = DEFAULT_FORMATS.tripleClickFormat;
+async function resetToDefaults(shouldSave = true) {
+  clickTypes.forEach(type => {
+    const typeElement = elements[`${type}ClickTypeElement`];
+    const customFormatElement = elements[`${type}ClickCustomFormatElement`];
+    const formatElement = elements[`${type}ClickFormatElement`];
 
-  // Save these defaults to storage as well
-  await saveFormats(); // This will also show a status message
-  showStatusMessage('Settings reset to defaults and saved.'); // Overwrite saveFormats message for clarity
+    const defaultType = DEFAULT_FORMAT_TYPES[`${type}ClickFormatType`];
+    typeElement.value = defaultType;
+    customFormatElement.value = ''; // Clear custom textarea
+    formatElement.value = DEFAULT_FORMAT_VALUES[`${type}ClickFormat`]; // Set to default value
+
+    updateTextareaVisibilityAndFormat(type);
+  });
+
+  if (shouldSave) {
+    await saveFormats(); // This will also show a status message
+    showStatusMessage('Settings reset to defaults and saved.'); // Overwrite saveFormats message for clarity
+  }
 }
 
 /**
@@ -198,31 +303,55 @@ function setupClickableCodeHandlers() {
  * Initializes the options page when the DOM is loaded
  */
 document.addEventListener('DOMContentLoaded', async () => {
-  // Load saved formats
-  await loadSavedFormats();
+  // Populate dropdowns
+  clickTypes.forEach(type => {
+    const typeElement = elements[`${type}ClickTypeElement`];
+    populateFormatOptions(typeElement);
 
-  // Set up form submission handler (using the form ID)
+    // Add event listeners for select changes
+    typeElement.addEventListener('change', () => {
+      updateTextareaVisibilityAndFormat(type);
+      // If a predefined type is selected, also update the hidden main format textarea
+      if (typeElement.value !== 'custom') {
+        elements[`${type}ClickFormatElement`].value = PREDEFINED_FORMATS[typeElement.value]?.value || '';
+      }
+    });
+
+    // Add event listener for custom textarea input
+    const customFormatElement = elements[`${type}ClickCustomFormatElement`];
+    customFormatElement.addEventListener('input', () => {
+      if (elements[`${type}ClickTypeElement`].value === 'custom') {
+        elements[`${type}ClickFormatElement`].value = customFormatElement.value;
+      }
+    });
+  });
+
+  // Load saved formats
+  await loadSavedFormats(); // This will also call updateTextareaVisibilityAndFormat for initial setup
+
+  // Set up form submission handler
   if (optionsForm) {
     optionsForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      // Before saving, ensure all hidden format fields are up-to-date
+      clickTypes.forEach(type => {
+        const typeElement = elements[`${type}ClickTypeElement`];
+        const customFormatElement = elements[`${type}ClickCustomFormatElement`];
+        const formatElement = elements[`${type}ClickFormatElement`];
+        if (typeElement.value === 'custom') {
+          formatElement.value = customFormatElement.value;
+        } else {
+          formatElement.value = PREDEFINED_FORMATS[typeElement.value]?.value || '';
+        }
+      });
       await saveFormats();
     });
-  } else {
-     // Fallback if form is not found, though it should be there with the new HTML.
-     // This could happen if saveBtn is outside a form, then we'd attach to saveBtn directly.
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.addEventListener('click', async (e) => {
-            e.preventDefault(); // If it's type="submit" this is good, otherwise not strictly needed.
-            await saveFormats();
-        });
-    }
   }
-
 
   // Set up reset button handler
   if (resetBtn) {
-    resetBtn.addEventListener('click', resetToDefaults);
+    // Pass true to ensure saveFormats is called by resetToDefaults
+    resetBtn.addEventListener('click', () => resetToDefaults(true));
   }
 
   // Set up clickable code handlers
@@ -236,21 +365,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Set up import button handler
   if (importBtn && importFile) {
     importBtn.addEventListener('click', () => importFile.click());
-    importFile.addEventListener('change', importConfig);
+    importFile.addEventListener('change', importConfigAndReload); // Changed to new import function
   }
 
   // Detect OS and display appropriate shortcut key
   const shortcutKeySpan = document.getElementById('shortcut-key');
   if (shortcutKeySpan) {
-    // Default to 'Cmd' as per new template, adjust if not Mac
-    // The new template already has "Cmd+Shift+1"
-    // We need to make it dynamic based on OS.
     if (navigator.platform.toUpperCase().indexOf('MAC') >= 0) {
       shortcutKeySpan.textContent = 'Cmd';
     } else {
       shortcutKeySpan.textContent = 'Ctrl';
     }
-    // Append the rest of the shortcut string which is static
     shortcutKeySpan.textContent += '+Shift+1';
   }
 });
@@ -260,10 +385,16 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 function exportConfig() {
   const config = {
-    format: {
-      single: singleClickElement.value,
-      double: doubleClickElement.value,
-      triple: tripleClickElement.value,
+    format: { // Keep this structure for backward compatibility if possible
+      single: elements.singleClickFormatElement.value,
+      double: elements.doubleClickFormatElement.value,
+      triple: elements.tripleClickFormatElement.value,
+    },
+    // Optionally, also export the selected types if needed for a more complete backup
+    types: {
+        single: elements.singleClickTypeElement.value,
+        double: elements.doubleClickTypeElement.value,
+        triple: elements.tripleClickTypeElement.value,
     }
   };
 
@@ -291,10 +422,11 @@ function exportConfig() {
   showStatusMessage('Configuration exported successfully!');
 }
 
+
 /**
- * Imports configuration from a JSON file
+ * Imports configuration from a JSON file and reloads the UI.
  */
-async function importConfig() {
+async function importConfigAndReload() {
   const file = importFile.files?.[0];
   if (!file) {
     showStatusMessage('No file selected for import.', true);
@@ -311,30 +443,66 @@ async function importConfig() {
       }
       const importedConfig = JSON.parse(content);
 
-      // Validate the imported configuration
-      if (
-        !importedConfig.format ||
-        typeof importedConfig.format !== 'object' ||
-        typeof importedConfig.format.single !== 'string' ||
-        typeof importedConfig.format.double !== 'string' ||
-        typeof importedConfig.format.triple !== 'string'
-      ) {
-        showStatusMessage(
-          'Invalid configuration file format. Make sure it includes a `format` object with `single`, `double`, and `triple` string properties.',
-          true
-        );
-        importFile.value = ''; // Reset file input
+      // Validate the imported configuration format
+      if (!importedConfig.format || typeof importedConfig.format !== 'object') {
+        showStatusMessage('Invalid configuration: `format` object missing.', true);
         return;
       }
 
-      // Update textareas using the correct IDs
-      singleClickElement.value = importedConfig.format.single;
-      doubleClickElement.value = importedConfig.format.double;
-      tripleClickElement.value = importedConfig.format.triple;
+      const dataToSave = {};
+      let updatePerformed = false;
 
-      // Save the new settings
-      await saveFormats(); // saveFormats already shows a success message
-      // showStatusMessage('Configuration imported and saved successfully!'); // This might be redundant if saveFormats shows one.
+      clickTypes.forEach(type => {
+        const formatValue = importedConfig.format[type];
+        const formatTypeKey = `${type}ClickFormatType`;
+        const formatValueKey = `${type}ClickFormat`;
+
+        if (typeof formatValue === 'string') {
+          // Check if a 'types' object exists and has a corresponding type
+          const importedType = importedConfig.types?.[type];
+
+          if (importedType && PREDEFINED_FORMATS[importedType]) {
+            // If a valid type is provided, use it
+            dataToSave[formatTypeKey] = importedType;
+            if (importedType === 'custom') {
+              dataToSave[formatValueKey] = formatValue; // Use the format value as custom
+            } else {
+              // If it's a predefined type, ensure the format value matches the predefined one
+              // This handles cases where a user might manually edit the JSON
+              dataToSave[formatValueKey] = PREDEFINED_FORMATS[importedType].value;
+            }
+          } else {
+            // Type not provided or invalid, determine type by matching formatValue
+            let matchedType = 'custom'; // Default to custom
+            for (const key in PREDEFINED_FORMATS) {
+              if (key !== 'custom' && PREDEFINED_FORMATS[key].value === formatValue) {
+                matchedType = key;
+                break;
+              }
+            }
+            dataToSave[formatTypeKey] = matchedType;
+            dataToSave[formatValueKey] = formatValue;
+          }
+          updatePerformed = true;
+        } else if (formatValue !== undefined) {
+          // Handle case where format.single exists but is not a string (invalid)
+          console.warn(`Invalid format value for ${type}:`, formatValue);
+        }
+      });
+
+      if (!updatePerformed) {
+        showStatusMessage('No valid format data found in the imported file for single, double, or triple clicks.', true);
+        importFile.value = '';
+        return;
+      }
+
+      // Save the new settings to chrome.storage.sync
+      await chrome.storage.sync.set(dataToSave);
+      showStatusMessage('Configuration imported successfully! Reloading settings...');
+
+      // Reload formats into the UI to reflect changes
+      await loadSavedFormats();
+
     } catch (error) {
       console.error('Error importing configuration:', error);
       showStatusMessage(
@@ -342,8 +510,7 @@ async function importConfig() {
         true
       );
     } finally {
-      // Reset the file input so the same file can be selected again if needed
-      importFile.value = '';
+      importFile.value = ''; // Reset file input
     }
   };
 
