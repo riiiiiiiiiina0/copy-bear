@@ -126,6 +126,18 @@ async function performClickAction(tabs, clickType) {
     // Replace literal '\n' (from user input) with actual newline characters in the template
     formatTemplate = formatTemplate.replace(/\\n/g, '\n');
 
+    // Handle screenshot action separately
+    if (formatTemplate === '<screenshot>') {
+      if (tabs.length > 0 && tabs[0].id) {
+        // For screenshot, we'll only operate on the first highlighted tab (usually the active one)
+        await captureAndCopyScreenshot(tabs[0].id);
+      } else {
+        console.error('Cannot take screenshot without a valid tab ID.');
+        showBadgeText('🖼️❌', true);
+      }
+      return; // Screenshot action is complete
+    }
+
     const isUrlAction = isUrlFormat(formatTemplate);
     let textsToCopy = [];
     let urlsToOpen = [];
@@ -136,11 +148,6 @@ async function performClickAction(tabs, clickType) {
       let quote = '';
 
       // Get selected text for the current tab
-      // Note: executeScript works on the active tab by default if tabId is not specified in target.
-      // However, to ensure it works for each highlighted tab, we must specify the tabId.
-      // This might only work if the script is triggered from a context that has access to that specific tab.
-      // For highlighted tabs that are not the *active* one, getting selected text might be problematic
-      // or require additional permissions/manifest changes. For now, we assume it works or gracefully degrades.
       if (tab.id) {
         try {
           const selectionResult = await chrome.scripting.executeScript({
@@ -177,39 +184,22 @@ async function performClickAction(tabs, clickType) {
     if (isUrlAction) {
       let openedAtLeastOne = false;
       for (const urlToOpen of urlsToOpen) {
-        await openUrl(urlToOpen); // openUrl shows its own badge ('🔗' or '⤴️' or '⚠️')
+        await openUrl(urlToOpen);
         openedAtLeastOne = true;
       }
       if (openedAtLeastOne) {
-        // If at least one URL was processed by openUrl, ensure a consistent '🔗' badge is shown,
-        // potentially overriding individual badges from openUrl if multiple URLs are opened quickly.
-        // openUrl itself calls showBadgeText. If urlsToOpen is > 1, this provides a summary.
-        // If only one, it might be redundant but ensures the requested '🔗'.
-        // However, openUrl also handles custom protocols with '⤴️'.
-        // The original request was "all show the same badge text 🔗 would be enough".
-        // This implies overriding the '⤴️' from openUrl for custom protocols in multi-open case.
-        // For simplicity and to adhere to the request, we'll just show '🔗' if any URL was processed.
-        // The individual `openUrl` calls will still show their specific badges briefly.
-        // This simplified line below might be sufficient if openUrl's badges are acceptable.
-        // The user specifically asked for "all show the same badge text 🔗", so if openUrl shows '⤴️',
-        // we might need to explicitly set '🔗' after the loop if `urlsToOpen.length > 0`.
         if (urlsToOpen.length > 0) {
             showBadgeText('🔗');
         }
-      } else if (tabs.length > 0) { // No URLs could be processed, but there were tabs
+      } else if (tabs.length > 0) {
         showBadgeText('⚠️', true);
       }
     } else {
       if (textsToCopy.length > 0) {
-        const combinedText = textsToCopy.join('\n\n'); // Separate entries with a double newline
-        // Use the first tab's ID for the copyToClipboard context, if available.
-        // This is a limitation as executeScript needs a specific tab context.
-        // Ideally, clipboard writing should happen directly in the service worker if possible,
-        // but navigator.clipboard is not available there.
+        const combinedText = textsToCopy.join('\n\n');
         const firstTabId = tabs[0].id;
         if (firstTabId) {
-          await copyToClipboard(firstTabId, combinedText);
-          // copyToClipboard will trigger a message for badge update
+          await copyTextToClipboard(firstTabId, combinedText);
         } else {
           console.error('Cannot copy text without a valid tab ID.');
           showBadgeText('⚠️', true);
@@ -221,6 +211,49 @@ async function performClickAction(tabs, clickType) {
   } catch (error) {
     console.error(`Error performing ${clickType} click action for multiple tabs:`, error);
     showBadgeText('⚠️', true);
+  }
+}
+
+
+/**
+ * Captures the visible part of the current tab and copies it to the clipboard.
+ * @param {number} tabId - The ID of the tab to capture.
+ * @returns {Promise<void>} Promise that resolves when the operation is complete.
+ */
+async function captureAndCopyScreenshot(tabId) {
+  try {
+    // Capture the visible tab as a PNG data URL
+    const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
+    if (!dataUrl) {
+      throw new Error('Failed to capture tab: dataUrl is empty.');
+    }
+
+    // Inject a script into the tab to copy the image to the clipboard
+    await chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      args: [dataUrl],
+      func: async (imageDataUrl) => {
+        try {
+          // Convert data URL to blob
+          const response = await fetch(imageDataUrl);
+          const blob = await response.blob();
+
+          // Use Clipboard API to write the image blob
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              [blob.type]: blob,
+            }),
+          ]);
+          chrome.runtime.sendMessage({ action: 'copySuccess' });
+        } catch (err) {
+          console.error('Error copying image to clipboard in content script:', err);
+          chrome.runtime.sendMessage({ action: 'copyError' });
+        }
+      },
+    });
+  } catch (error) {
+    console.error('Failed to capture and copy screenshot:', error);
+    showBadgeText('🖼️❌', true); // Using a different error badge for screenshot specific error
   }
 }
 
@@ -262,7 +295,7 @@ async function performTripleClickAction(tabs) {
  * @returns {Promise<void>} Promise that resolves when copy operation is complete
  * @description First tries navigator.clipboard.writeText, falls back to document.execCommand if needed
  */
-async function copyToClipboard(tabId, textToCopy) {
+async function copyTextToClipboard(tabId, textToCopy) {
   try {
     await chrome.scripting.executeScript({
       target: { tabId: tabId },
@@ -396,8 +429,10 @@ function performActionForTabs(tabs) {
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'copySuccess') {
-    showBadgeText('✔️');
+    showBadgeText('✔️'); // Standard success badge
   } else if (message.action === 'copyError') {
-    showBadgeText('⚠️', true);
+    showBadgeText('⚠️', true); // Standard error badge
   }
+  // Note: captureAndCopyScreenshot has its own error badge '🖼️❌' for capture phase errors.
+  // If content script copy fails for screenshot, it will use '⚠️'.
 });
