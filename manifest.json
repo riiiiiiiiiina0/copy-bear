@@ -10,6 +10,9 @@
     "storage",
     "tabs"
   ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "action": {
     "default_title": "Copy title and URL to clipboard"
   },
