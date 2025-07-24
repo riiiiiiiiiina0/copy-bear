@@ -152,13 +152,20 @@ async function performClickAction(tabs, clickType) {
         try {
           const selectionResult = await chrome.scripting.executeScript({
             target: { tabId: tab.id },
-            func: () => window.getSelection().toString(),
+            func: () => window.getSelection()?.toString() || '',
           });
-          if (selectionResult && selectionResult.length > 0 && selectionResult[0].result) {
+          if (
+            selectionResult &&
+            selectionResult.length > 0 &&
+            selectionResult[0].result
+          ) {
             quote = selectionResult[0].result.trim();
           }
         } catch (e) {
-          console.warn(`Could not retrieve selected text for tab ${tab.id}:`, e);
+          console.warn(
+            `Could not retrieve selected text for tab ${tab.id}:`,
+            e,
+          );
           // Proceed without selected text for this tab
         }
       }
@@ -189,7 +196,7 @@ async function performClickAction(tabs, clickType) {
       }
       if (openedAtLeastOne) {
         if (urlsToOpen.length > 0) {
-            showBadgeText('🔗');
+          showBadgeText('🔗');
         }
       } else if (tabs.length > 0) {
         showBadgeText('⚠️', true);
@@ -209,11 +216,13 @@ async function performClickAction(tabs, clickType) {
       }
     }
   } catch (error) {
-    console.error(`Error performing ${clickType} click action for multiple tabs:`, error);
+    console.error(
+      `Error performing ${clickType} click action for multiple tabs:`,
+      error,
+    );
     showBadgeText('⚠️', true);
   }
 }
-
 
 /**
  * Captures the visible part of the current tab and copies it to the clipboard.
@@ -222,10 +231,42 @@ async function performClickAction(tabs, clickType) {
  */
 async function captureAndCopyScreenshot(tabId) {
   try {
+    const tab = await chrome.tabs.get(tabId);
     // Capture the visible tab as a PNG data URL
-    const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
+    const dataUrl = await chrome.tabs.captureVisibleTab({
+      format: 'png',
+    });
     if (!dataUrl) {
       throw new Error('Failed to capture tab: dataUrl is empty.');
+    }
+
+    const { autoSaveScreenshot } = await chrome.storage.sync.get({
+      autoSaveScreenshot: false,
+    });
+
+    if (autoSaveScreenshot) {
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}${(now.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}-${now
+        .getHours()
+        .toString()
+        .padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+      const maxTitleLength = 100;
+      let title = tab.title || 'no-title';
+      if (title.length > maxTitleLength) {
+        title = title.slice(0, maxTitleLength);
+      }
+      const filename = `${timestamp}-${title}.jpg`;
+
+      // Sanitize filename
+      const sanitizedFilename = filename.replace(/[/\\?%*:|"<>]/g, '-');
+
+      chrome.downloads.download({
+        url: dataUrl,
+        filename: sanitizedFilename,
+        saveAs: false,
+      });
     }
 
     // Inject a script into the tab to copy the image to the clipboard
@@ -246,7 +287,10 @@ async function captureAndCopyScreenshot(tabId) {
           ]);
           chrome.runtime.sendMessage({ action: 'copySuccess' });
         } catch (err) {
-          console.error('Error copying image to clipboard in content script:', err);
+          console.error(
+            'Error copying image to clipboard in content script:',
+            err,
+          );
           chrome.runtime.sendMessage({ action: 'copyError' });
         }
       },
@@ -256,7 +300,6 @@ async function captureAndCopyScreenshot(tabId) {
     showBadgeText('🖼️❌', true); // Using a different error badge for screenshot specific error
   }
 }
-
 
 /**
  * Performs single-click action using the user's custom single-click format
@@ -378,10 +421,10 @@ chrome.action.onClicked.addListener(async (activeTab) => {
     // or if the query somehow fails, though chrome.tabs.query is robust.
     // If activeTab itself doesn't have an ID (e.g. devtools window), then show error.
     if (!activeTab || !activeTab.id) {
-        console.error('No valid tab found for action.');
-        showBadgeText('⚠️', true);
-        clickCount = 0; // Reset click count as the action cannot proceed
-        return;
+      console.error('No valid tab found for action.');
+      showBadgeText('⚠️', true);
+      clickCount = 0; // Reset click count as the action cannot proceed
+      return;
     }
     // Proceed with just the active tab if it's valid
     // This ensures that if a user clicks the extension on a page like chrome://extensions,
@@ -393,29 +436,28 @@ chrome.action.onClicked.addListener(async (activeTab) => {
   performActionForTabs(highlightedTabs);
 });
 
-
 /**
  * Handles the click timing and dispatches action for the given tabs.
  * @param {chrome.tabs.Tab[]} tabs - The array of tabs to perform the action on.
  */
 function performActionForTabs(tabs) {
-    clickCount++;
+  clickCount++;
 
-    // Clear the timer but don't execute yet - wait for potential double or triple click
-    clearTimeout(clickTimer);
+  // Clear the timer but don't execute yet - wait for potential double or triple click
+  clearTimeout(clickTimer);
 
-    if (clickCount === 1) {
-        registerClick(performSingleClickAction, tabs, MULTI_CLICK_DELAY);
-    } else if (clickCount === 2) {
-        registerClick(performDoubleClickAction, tabs, MULTI_CLICK_DELAY);
-    } else if (clickCount === 3) {
-        // For triple click, execute immediately (or after a very short delay if needed, though 0 is typical)
-        registerClick(performTripleClickAction, tabs, 0);
-        // clickCount is reset by registerClick's timeout
-    } else {
-        // More than 3 clicks - reset counter and effectively ignore this click train
-        clickCount = 0;
-    }
+  if (clickCount === 1) {
+    registerClick(performSingleClickAction, tabs, MULTI_CLICK_DELAY);
+  } else if (clickCount === 2) {
+    registerClick(performDoubleClickAction, tabs, MULTI_CLICK_DELAY);
+  } else if (clickCount === 3) {
+    // For triple click, execute immediately (or after a very short delay if needed, though 0 is typical)
+    registerClick(performTripleClickAction, tabs, 0);
+    // clickCount is reset by registerClick's timeout
+  } else {
+    // More than 3 clicks - reset counter and effectively ignore this click train
+    clickCount = 0;
+  }
 }
 
 /**
