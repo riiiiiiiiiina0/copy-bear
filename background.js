@@ -222,10 +222,33 @@ async function performClickAction(tabs, clickType) {
  */
 async function captureAndCopyScreenshot(tabId) {
   try {
+    const tab = await chrome.tabs.get(tabId);
     // Capture the visible tab as a PNG data URL
     const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
     if (!dataUrl) {
       throw new Error('Failed to capture tab: dataUrl is empty.');
+    }
+
+    const { autoSaveScreenshot } = await chrome.storage.sync.get({ autoSaveScreenshot: false });
+
+    if (autoSaveScreenshot) {
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}-${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+      let title = tab.title || 'no-title';
+      if (title.length > 20) {
+        title = `${title.slice(0, 20)}...`;
+      }
+      const url = tab.url || 'no-url';
+      const filename = `${timestamp}-${title}-${url}.jpg`;
+
+      // Sanitize filename
+      const sanitizedFilename = filename.replace(/[/\\?%*:|"<>]/g, '-');
+
+      chrome.downloads.download({
+        url: dataUrl,
+        filename: sanitizedFilename,
+        saveAs: false,
+      });
     }
 
     // Inject a script into the tab to copy the image to the clipboard

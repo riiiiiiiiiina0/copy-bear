@@ -42,7 +42,9 @@ const DEFAULT_FORMAT_VALUES = {
 
 // Element selectors
 const clickTypes = ['single', 'double', 'triple'];
-const elements = {};
+const elements = {
+  autoSaveScreenshotElement: /** @type {HTMLInputElement} */ (document.getElementById('autoSaveScreenshot')),
+};
 
 clickTypes.forEach(type => {
   elements[`${type}ClickTypeElement`] = /** @type {HTMLSelectElement} */ (document.getElementById(`${type}-click-type`));
@@ -149,13 +151,20 @@ function showStatusMessage(message, isError = false) {
  */
 async function loadSavedFormats() {
   try {
-    const itemsToGet = {};
+    const itemsToGet = {
+      autoSaveScreenshot: false, // Default value
+    };
     clickTypes.forEach(type => {
       itemsToGet[`${type}ClickFormatType`] = DEFAULT_FORMAT_TYPES[`${type}ClickFormatType`];
       itemsToGet[`${type}ClickFormat`] = DEFAULT_FORMAT_VALUES[`${type}ClickFormat`];
     });
 
     const result = await chrome.storage.sync.get(itemsToGet);
+
+    // Load autoSaveScreenshot setting
+    if (elements.autoSaveScreenshotElement) {
+      elements.autoSaveScreenshotElement.checked = result.autoSaveScreenshot;
+    }
 
     clickTypes.forEach(type => {
       const typeElement = elements[`${type}ClickTypeElement`];
@@ -191,7 +200,9 @@ async function loadSavedFormats() {
  */
 async function saveFormats() {
   try {
-    const dataToSave = {};
+    const dataToSave = {
+      autoSaveScreenshot: elements.autoSaveScreenshotElement.checked,
+    };
     clickTypes.forEach(type => {
       const typeElement = elements[`${type}ClickTypeElement`];
       const customFormatElement = elements[`${type}ClickCustomFormatElement`];
@@ -222,6 +233,11 @@ async function saveFormats() {
  * @param {boolean} [shouldSave=true] - Whether to save after resetting.
  */
 async function resetToDefaults(shouldSave = true) {
+  // Reset autoSaveScreenshot checkbox
+  if (elements.autoSaveScreenshotElement) {
+    elements.autoSaveScreenshotElement.checked = false;
+  }
+
   clickTypes.forEach(type => {
     const typeElement = elements[`${type}ClickTypeElement`];
     const customFormatElement = elements[`${type}ClickCustomFormatElement`];
