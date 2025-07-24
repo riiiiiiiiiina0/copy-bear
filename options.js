@@ -44,6 +44,8 @@ const DEFAULT_FORMAT_VALUES = {
 const clickTypes = ['single', 'double', 'triple'];
 const elements = {
   autoSaveScreenshotElement: /** @type {HTMLInputElement} */ (document.getElementById('autoSaveScreenshot')),
+  screenshotPathContainer: /** @type {HTMLDivElement} */ (document.getElementById('screenshotPathContainer')),
+  screenshotSavePathElement: /** @type {HTMLInputElement} */ (document.getElementById('screenshotSavePath')),
 };
 
 clickTypes.forEach(type => {
@@ -151,19 +153,30 @@ function showStatusMessage(message, isError = false) {
  */
 async function loadSavedFormats() {
   try {
-    const itemsToGet = {
+    const syncItemsToGet = {
       autoSaveScreenshot: false, // Default value
     };
     clickTypes.forEach(type => {
-      itemsToGet[`${type}ClickFormatType`] = DEFAULT_FORMAT_TYPES[`${type}ClickFormatType`];
-      itemsToGet[`${type}ClickFormat`] = DEFAULT_FORMAT_VALUES[`${type}ClickFormat`];
+      syncItemsToGet[`${type}ClickFormatType`] = DEFAULT_FORMAT_TYPES[`${type}ClickFormatType`];
+      syncItemsToGet[`${type}ClickFormat`] = DEFAULT_FORMAT_VALUES[`${type}ClickFormat`];
     });
 
-    const result = await chrome.storage.sync.get(itemsToGet);
+    const localItemsToGet = {
+      screenshotSavePath: '', // Default value
+    };
+
+    const syncResult = await chrome.storage.sync.get(syncItemsToGet);
+    const localResult = await chrome.storage.local.get(localItemsToGet);
 
     // Load autoSaveScreenshot setting
     if (elements.autoSaveScreenshotElement) {
-      elements.autoSaveScreenshotElement.checked = result.autoSaveScreenshot;
+      elements.autoSaveScreenshotElement.checked = syncResult.autoSaveScreenshot;
+      toggleScreenshotPathVisibility(); // Initial visibility check
+    }
+
+    // Load screenshotSavePath setting
+    if (elements.screenshotSavePathElement) {
+      elements.screenshotSavePathElement.value = localResult.screenshotSavePath;
     }
 
     clickTypes.forEach(type => {
@@ -171,8 +184,8 @@ async function loadSavedFormats() {
       const customFormatElement = elements[`${type}ClickCustomFormatElement`];
       const formatElement = elements[`${type}ClickFormatElement`];
 
-      const savedType = result[`${type}ClickFormatType`];
-      const savedFormat = result[`${type}ClickFormat`];
+      const savedType = syncResult[`${type}ClickFormatType`];
+      const savedFormat = syncResult[`${type}ClickFormat`];
 
       typeElement.value = savedType;
       formatElement.value = savedFormat; // This is the actual format string
@@ -198,29 +211,45 @@ async function loadSavedFormats() {
 /**
  * Saves the current form values (formats) to Chrome storage
  */
+/**
+ * Toggles the visibility of the screenshot path container based on the checkbox.
+ */
+function toggleScreenshotPathVisibility() {
+  if (elements.autoSaveScreenshotElement.checked) {
+    elements.screenshotPathContainer.style.display = 'block';
+  } else {
+    elements.screenshotPathContainer.style.display = 'none';
+  }
+}
+
 async function saveFormats() {
   try {
-    const dataToSave = {
+    const syncDataToSave = {
       autoSaveScreenshot: elements.autoSaveScreenshotElement.checked,
     };
+    const localDataToSave = {
+      screenshotSavePath: elements.screenshotSavePathElement.value.trim(),
+    };
+
     clickTypes.forEach(type => {
       const typeElement = elements[`${type}ClickTypeElement`];
       const customFormatElement = elements[`${type}ClickCustomFormatElement`];
       // const formatElement = elements[`${type}ClickFormatElement`]; // We'll set this based on logic
 
       const selectedType = typeElement.value;
-      dataToSave[`${type}ClickFormatType`] = selectedType;
+      syncDataToSave[`${type}ClickFormatType`] = selectedType;
 
       if (selectedType === 'custom') {
-        dataToSave[`${type}ClickFormat`] = customFormatElement.value.trim();
+        syncDataToSave[`${type}ClickFormat`] = customFormatElement.value.trim();
       } else {
-        dataToSave[`${type}ClickFormat`] = PREDEFINED_FORMATS[selectedType]?.value || '';
+        syncDataToSave[`${type}ClickFormat`] = PREDEFINED_FORMATS[selectedType]?.value || '';
       }
       // Update the hidden format element as well, though it's mostly for direct use by other parts if any.
-      elements[`${type}ClickFormatElement`].value = dataToSave[`${type}ClickFormat`];
+      elements[`${type}ClickFormatElement`].value = syncDataToSave[`${type}ClickFormat`];
     });
 
-    await chrome.storage.sync.set(dataToSave);
+    await chrome.storage.sync.set(syncDataToSave);
+    await chrome.storage.local.set(localDataToSave);
     showStatusMessage('Settings saved successfully!');
   } catch (error) {
     console.error('Error saving formats:', error);
@@ -237,6 +266,11 @@ async function resetToDefaults(shouldSave = true) {
   if (elements.autoSaveScreenshotElement) {
     elements.autoSaveScreenshotElement.checked = false;
   }
+  // Reset screenshotSavePath input
+  if (elements.screenshotSavePathElement) {
+    elements.screenshotSavePathElement.value = '';
+  }
+  toggleScreenshotPathVisibility(); // Hide the path input
 
   clickTypes.forEach(type => {
     const typeElement = elements[`${type}ClickTypeElement`];
@@ -369,6 +403,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (resetBtn) {
     // Pass true to ensure saveFormats is called by resetToDefaults
     resetBtn.addEventListener('click', () => resetToDefaults(true));
+  }
+
+  // Add event listener for the auto-save checkbox
+  if (elements.autoSaveScreenshotElement) {
+    elements.autoSaveScreenshotElement.addEventListener('change', toggleScreenshotPathVisibility);
   }
 
   // Set up clickable code handlers
