@@ -245,9 +245,9 @@ async function captureAndCopyScreenshot(tabId) {
     });
 
     if (autoSaveScreenshot) {
-      const { screenshotSavePath } = await chrome.storage.local.get({
-        screenshotSavePath: '',
-      });
+      const { screenshotSavePath = '' } = await chrome.storage.local.get(
+        'screenshotSavePath',
+      );
 
       const now = new Date();
       const timestamp = `${now.getFullYear()}${(now.getMonth() + 1)
@@ -265,7 +265,23 @@ async function captureAndCopyScreenshot(tabId) {
 
       // Sanitize filename
       const sanitizedFilename = filename.replace(/[/\\?%*:|"<>]/g, '-');
-      const finalFilename = screenshotSavePath ? `${screenshotSavePath}${sanitizedFilename}` : sanitizedFilename;
+
+      // Sanitize the folder path: remove trailing slash, and replace illegal filename characters
+      const folderPath = screenshotSavePath
+        .trim()
+        // Remove trailing slash
+        .replace(/\/$/, '')
+        // Split into folder segments
+        .split('/')
+        // Remove illegal filename characters from each folder segment
+        .map((segment) => segment.replace(/[/\\?%*:|"<>]/g, '-'))
+        .filter(Boolean) // Remove empty segments
+        .join('/');
+
+      // Join folder path and filename
+      const finalFilename = folderPath
+        ? `${folderPath}/${sanitizedFilename}`
+        : sanitizedFilename;
 
       chrome.downloads.download({
         url: dataUrl,
