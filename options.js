@@ -14,8 +14,14 @@
  * @constant
  */
 const PREDEFINED_FORMATS = {
-  title_url_2_lines: { name: 'Title and URL (2 lines)', value: '<title>\n<url>' },
-  title_url_1_line: { name: 'Title and URL (1 line)', value: '<title> - <url>' },
+  title_url_2_lines: {
+    name: 'Title and URL (2 lines)',
+    value: '<title>\n<url>',
+  },
+  title_url_1_line: {
+    name: 'Title and URL (1 line)',
+    value: '<title> - <url>',
+  },
   markdown: { name: 'Markdown', value: '[<title>](<url>)' },
   screenshot: { name: 'Screenshot', value: '<screenshot>' }, // Added Screenshot option
   custom: { name: 'Custom Format', value: '' }, // Custom value will be from textarea
@@ -39,17 +45,31 @@ const DEFAULT_FORMAT_VALUES = {
   tripleClickFormat: PREDEFINED_FORMATS.title_url_1_line.value,
 };
 
-
 // Element selectors
 const clickTypes = ['single', 'double', 'triple'];
 const elements = {
-  autoSaveScreenshotElement: /** @type {HTMLInputElement} */ (document.getElementById('autoSaveScreenshot')),
+  autoSaveScreenshotElement: /** @type {HTMLInputElement} */ (
+    document.getElementById('autoSaveScreenshot')
+  ),
+  screenshotPathContainer: /** @type {HTMLDivElement} */ (
+    document.getElementById('screenshotPathContainer')
+  ),
+  screenshotSavePathElement: /** @type {HTMLInputElement} */ (
+    document.getElementById('screenshotSavePath')
+  ),
 };
 
-clickTypes.forEach(type => {
-  elements[`${type}ClickTypeElement`] = /** @type {HTMLSelectElement} */ (document.getElementById(`${type}-click-type`));
-  elements[`${type}ClickCustomFormatElement`] = /** @type {HTMLTextAreaElement} */ (document.getElementById(`${type}-click-custom-format`));
-  elements[`${type}ClickFormatElement`] = /** @type {HTMLTextAreaElement} */ (document.getElementById(`${type}-click-format`));
+clickTypes.forEach((type) => {
+  elements[`${type}ClickTypeElement`] = /** @type {HTMLSelectElement} */ (
+    document.getElementById(`${type}-click-type`)
+  );
+  elements[`${type}ClickCustomFormatElement`] =
+    /** @type {HTMLTextAreaElement} */ (
+      document.getElementById(`${type}-click-custom-format`)
+    );
+  elements[`${type}ClickFormatElement`] = /** @type {HTMLTextAreaElement} */ (
+    document.getElementById(`${type}-click-format`)
+  );
 });
 
 const optionsForm = /** @type {HTMLFormElement} */ (
@@ -117,7 +137,6 @@ function updateTextareaVisibilityAndFormat(type) {
   }
 }
 
-
 /**
  * Shows a status message to the user
  * @param {string} message - The message to display
@@ -130,7 +149,7 @@ function showStatusMessage(message, isError = false) {
   statusElement.textContent = message;
   statusElement.classList.remove(
     'status-message-success',
-    'status-message-error'
+    'status-message-error',
   );
   if (isError) {
     statusElement.classList.add('status-message-error');
@@ -151,28 +170,42 @@ function showStatusMessage(message, isError = false) {
  */
 async function loadSavedFormats() {
   try {
-    const itemsToGet = {
+    const syncItemsToGet = {
       autoSaveScreenshot: false, // Default value
     };
-    clickTypes.forEach(type => {
-      itemsToGet[`${type}ClickFormatType`] = DEFAULT_FORMAT_TYPES[`${type}ClickFormatType`];
-      itemsToGet[`${type}ClickFormat`] = DEFAULT_FORMAT_VALUES[`${type}ClickFormat`];
+    clickTypes.forEach((type) => {
+      syncItemsToGet[`${type}ClickFormatType`] =
+        DEFAULT_FORMAT_TYPES[`${type}ClickFormatType`];
+      syncItemsToGet[`${type}ClickFormat`] =
+        DEFAULT_FORMAT_VALUES[`${type}ClickFormat`];
     });
 
-    const result = await chrome.storage.sync.get(itemsToGet);
+    const localItemsToGet = {
+      screenshotSavePath: '', // Default value
+    };
+
+    const syncResult = await chrome.storage.sync.get(syncItemsToGet);
+    const localResult = await chrome.storage.local.get(localItemsToGet);
 
     // Load autoSaveScreenshot setting
     if (elements.autoSaveScreenshotElement) {
-      elements.autoSaveScreenshotElement.checked = result.autoSaveScreenshot;
+      elements.autoSaveScreenshotElement.checked =
+        syncResult.autoSaveScreenshot;
+      toggleScreenshotPathVisibility(); // Initial visibility check
     }
 
-    clickTypes.forEach(type => {
+    // Load screenshotSavePath setting
+    if (elements.screenshotSavePathElement) {
+      elements.screenshotSavePathElement.value = localResult.screenshotSavePath;
+    }
+
+    clickTypes.forEach((type) => {
       const typeElement = elements[`${type}ClickTypeElement`];
       const customFormatElement = elements[`${type}ClickCustomFormatElement`];
       const formatElement = elements[`${type}ClickFormatElement`];
 
-      const savedType = result[`${type}ClickFormatType`];
-      const savedFormat = result[`${type}ClickFormat`];
+      const savedType = syncResult[`${type}ClickFormatType`];
+      const savedFormat = syncResult[`${type}ClickFormat`];
 
       typeElement.value = savedType;
       formatElement.value = savedFormat; // This is the actual format string
@@ -186,7 +219,6 @@ async function loadSavedFormats() {
       }
       updateTextareaVisibilityAndFormat(type); // Ensure correct visibility
     });
-
   } catch (error) {
     console.error('Error loading saved formats:', error);
     showStatusMessage('Error loading saved settings. Using defaults.', true);
@@ -198,29 +230,47 @@ async function loadSavedFormats() {
 /**
  * Saves the current form values (formats) to Chrome storage
  */
+/**
+ * Toggles the visibility of the screenshot path container based on the checkbox.
+ */
+function toggleScreenshotPathVisibility() {
+  if (elements.autoSaveScreenshotElement.checked) {
+    elements.screenshotPathContainer.style.display = 'block';
+  } else {
+    elements.screenshotPathContainer.style.display = 'none';
+  }
+}
+
 async function saveFormats() {
   try {
-    const dataToSave = {
+    const syncDataToSave = {
       autoSaveScreenshot: elements.autoSaveScreenshotElement.checked,
     };
-    clickTypes.forEach(type => {
+    const localDataToSave = {
+      screenshotSavePath: elements.screenshotSavePathElement.value.trim(),
+    };
+
+    clickTypes.forEach((type) => {
       const typeElement = elements[`${type}ClickTypeElement`];
       const customFormatElement = elements[`${type}ClickCustomFormatElement`];
       // const formatElement = elements[`${type}ClickFormatElement`]; // We'll set this based on logic
 
       const selectedType = typeElement.value;
-      dataToSave[`${type}ClickFormatType`] = selectedType;
+      syncDataToSave[`${type}ClickFormatType`] = selectedType;
 
       if (selectedType === 'custom') {
-        dataToSave[`${type}ClickFormat`] = customFormatElement.value.trim();
+        syncDataToSave[`${type}ClickFormat`] = customFormatElement.value.trim();
       } else {
-        dataToSave[`${type}ClickFormat`] = PREDEFINED_FORMATS[selectedType]?.value || '';
+        syncDataToSave[`${type}ClickFormat`] =
+          PREDEFINED_FORMATS[selectedType]?.value || '';
       }
       // Update the hidden format element as well, though it's mostly for direct use by other parts if any.
-      elements[`${type}ClickFormatElement`].value = dataToSave[`${type}ClickFormat`];
+      elements[`${type}ClickFormatElement`].value =
+        syncDataToSave[`${type}ClickFormat`];
     });
 
-    await chrome.storage.sync.set(dataToSave);
+    await chrome.storage.sync.set(syncDataToSave);
+    await chrome.storage.local.set(localDataToSave);
     showStatusMessage('Settings saved successfully!');
   } catch (error) {
     console.error('Error saving formats:', error);
@@ -237,8 +287,13 @@ async function resetToDefaults(shouldSave = true) {
   if (elements.autoSaveScreenshotElement) {
     elements.autoSaveScreenshotElement.checked = false;
   }
+  // Reset screenshotSavePath input
+  if (elements.screenshotSavePathElement) {
+    elements.screenshotSavePathElement.value = '';
+  }
+  toggleScreenshotPathVisibility(); // Hide the path input
 
-  clickTypes.forEach(type => {
+  clickTypes.forEach((type) => {
     const typeElement = elements[`${type}ClickTypeElement`];
     const customFormatElement = elements[`${type}ClickCustomFormatElement`];
     const formatElement = elements[`${type}ClickFormatElement`];
@@ -301,7 +356,6 @@ function setupClickableCodeHandlers() {
         codeElement.classList.remove('bg-blue-100', 'text-blue-800');
         codeElement.classList.add('bg-green-500', 'text-white');
 
-
         // Reset after a short delay
         setTimeout(() => {
           codeElement.textContent = originalText;
@@ -321,7 +375,7 @@ function setupClickableCodeHandlers() {
  */
 document.addEventListener('DOMContentLoaded', async () => {
   // Populate dropdowns
-  clickTypes.forEach(type => {
+  clickTypes.forEach((type) => {
     const typeElement = elements[`${type}ClickTypeElement`];
     populateFormatOptions(typeElement);
 
@@ -330,7 +384,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       updateTextareaVisibilityAndFormat(type);
       // If a predefined type is selected, also update the hidden main format textarea
       if (typeElement.value !== 'custom') {
-        elements[`${type}ClickFormatElement`].value = PREDEFINED_FORMATS[typeElement.value]?.value || '';
+        elements[`${type}ClickFormatElement`].value =
+          PREDEFINED_FORMATS[typeElement.value]?.value || '';
       }
     });
 
@@ -351,14 +406,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     optionsForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       // Before saving, ensure all hidden format fields are up-to-date
-      clickTypes.forEach(type => {
+      clickTypes.forEach((type) => {
         const typeElement = elements[`${type}ClickTypeElement`];
         const customFormatElement = elements[`${type}ClickCustomFormatElement`];
         const formatElement = elements[`${type}ClickFormatElement`];
         if (typeElement.value === 'custom') {
           formatElement.value = customFormatElement.value;
         } else {
-          formatElement.value = PREDEFINED_FORMATS[typeElement.value]?.value || '';
+          formatElement.value =
+            PREDEFINED_FORMATS[typeElement.value]?.value || '';
         }
       });
       await saveFormats();
@@ -369,6 +425,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (resetBtn) {
     // Pass true to ensure saveFormats is called by resetToDefaults
     resetBtn.addEventListener('click', () => resetToDefaults(true));
+  }
+
+  // Add event listener for the auto-save checkbox
+  if (elements.autoSaveScreenshotElement) {
+    elements.autoSaveScreenshotElement.addEventListener(
+      'change',
+      toggleScreenshotPathVisibility,
+    );
   }
 
   // Set up clickable code handlers
@@ -402,17 +466,18 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 function exportConfig() {
   const config = {
-    format: { // Keep this structure for backward compatibility if possible
+    format: {
+      // Keep this structure for backward compatibility if possible
       single: elements.singleClickFormatElement.value,
       double: elements.doubleClickFormatElement.value,
       triple: elements.tripleClickFormatElement.value,
     },
     // Optionally, also export the selected types if needed for a more complete backup
     types: {
-        single: elements.singleClickTypeElement.value,
-        double: elements.doubleClickTypeElement.value,
-        triple: elements.tripleClickTypeElement.value,
-    }
+      single: elements.singleClickTypeElement.value,
+      double: elements.doubleClickTypeElement.value,
+      triple: elements.tripleClickTypeElement.value,
+    },
   };
 
   const jsonString = JSON.stringify(config, null, 2);
@@ -439,7 +504,6 @@ function exportConfig() {
   showStatusMessage('Configuration exported successfully!');
 }
 
-
 /**
  * Imports configuration from a JSON file and reloads the UI.
  */
@@ -462,14 +526,17 @@ async function importConfigAndReload() {
 
       // Validate the imported configuration format
       if (!importedConfig.format || typeof importedConfig.format !== 'object') {
-        showStatusMessage('Invalid configuration: `format` object missing.', true);
+        showStatusMessage(
+          'Invalid configuration: `format` object missing.',
+          true,
+        );
         return;
       }
 
       const dataToSave = {};
       let updatePerformed = false;
 
-      clickTypes.forEach(type => {
+      clickTypes.forEach((type) => {
         const formatValue = importedConfig.format[type];
         const formatTypeKey = `${type}ClickFormatType`;
         const formatValueKey = `${type}ClickFormat`;
@@ -486,13 +553,17 @@ async function importConfigAndReload() {
             } else {
               // If it's a predefined type, ensure the format value matches the predefined one
               // This handles cases where a user might manually edit the JSON
-              dataToSave[formatValueKey] = PREDEFINED_FORMATS[importedType].value;
+              dataToSave[formatValueKey] =
+                PREDEFINED_FORMATS[importedType].value;
             }
           } else {
             // Type not provided or invalid, determine type by matching formatValue
             let matchedType = 'custom'; // Default to custom
             for (const key in PREDEFINED_FORMATS) {
-              if (key !== 'custom' && PREDEFINED_FORMATS[key].value === formatValue) {
+              if (
+                key !== 'custom' &&
+                PREDEFINED_FORMATS[key].value === formatValue
+              ) {
                 matchedType = key;
                 break;
               }
@@ -508,23 +579,27 @@ async function importConfigAndReload() {
       });
 
       if (!updatePerformed) {
-        showStatusMessage('No valid format data found in the imported file for single, double, or triple clicks.', true);
+        showStatusMessage(
+          'No valid format data found in the imported file for single, double, or triple clicks.',
+          true,
+        );
         importFile.value = '';
         return;
       }
 
       // Save the new settings to chrome.storage.sync
       await chrome.storage.sync.set(dataToSave);
-      showStatusMessage('Configuration imported successfully! Reloading settings...');
+      showStatusMessage(
+        'Configuration imported successfully! Reloading settings...',
+      );
 
       // Reload formats into the UI to reflect changes
       await loadSavedFormats();
-
     } catch (error) {
       console.error('Error importing configuration:', error);
       showStatusMessage(
         `Error importing configuration: ${error.message}. Please ensure the file is a valid JSON.`,
-        true
+        true,
       );
     } finally {
       importFile.value = ''; // Reset file input
