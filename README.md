@@ -1,4 +1,4 @@
-# 📋🐻‍❄️ Copy Bear
+# 🐻‍❄️📋📸 Copy Bear
 
 > _Copy-paste like a pro-bear!_
 
