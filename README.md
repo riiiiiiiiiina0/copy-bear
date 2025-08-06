@@ -8,6 +8,8 @@
 
 Copy Bear makes research, writing, and sharing as easy as stealing honey from a picnic basket. 🍯
 
+![](./docs/poster.jpeg)
+
 <a href="https://buymeacoffee.com/riiiiiiiiiina" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 ---
