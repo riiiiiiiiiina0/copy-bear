@@ -1,175 +1,98 @@
-# Copy Title & URL Chrome Extension
+# 📋🐻‍❄️ Copy Bear
 
-A powerful Chrome extension that copies the current tab's title and URL to your clipboard or opens URLs with single, double, or triple clicks in customizable formats.
+> _Copy-paste like a pro-bear!_
+
+## What is Copy Bear?
+
+**Copy Bear** is your cuddly Chrome sidekick for copying page titles and URLs. With just one paw (okay, click), Copy Bear grabs the info you need and hands it over in your favorite style—plain text, markdown, and more! No more clumsy typing or awkward “what was that link again?” moments.
+
+Copy Bear makes research, writing, and sharing as easy as stealing honey from a picnic basket. 🍯
 
 <a href="https://buymeacoffee.com/riiiiiiiiiina" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
-- 📋 **Multiple Click Actions**: Single, double, and triple-click support
-- 🖱️ **Multi-Tab Highlight Support**: Copy titles and URLs from multiple highlighted browser tabs at once
-- 🎨 **Fully Customizable**: Configure formats and actions for each click type
-- 📝 **Dual Action Types**: Copy to clipboard OR open URL in new tab
-- 🔧 **Custom Templates**: Use variables like `<title>`, `<url>`, and `<quote>` in your formats
-- ⚙️ **Options Page**: Easy-to-use settings interface for complete customization
+---
 
-## Installation
+## 🐾 Features
 
-### Install from Chrome Web Store
+- **Bear-fast copying**: Page title and URL in a single click!
+- **Multi-format support**: Plain text, markdown, you name it—Copy Bear does it all. Bear can even take screenshot too!
+- **Triple-click tricks**: Single, double, or triple click for different copy magic!
+- **Copy from many tabs**: Highlight a whole forest of tabs and Copy Bear gathers them all!
+- **Customizable templates**: Make your copied text as wild or as neat as you like.
+- **Clipboard champion**: Never fumble with CTRL+C again.
 
-[Available on the Chrome Web Store](https://chromewebstore.google.com/detail/copy-title-url/hbklhjjjhdjmnbelfbijaenabkpmnbbe)
+---
 
-### Install Manually (Developer Mode)
+## 🌲 How to Use
 
-1. Clone or download this repository
-2. Open Chrome and go to `chrome://extensions/`
-3. Enable "Developer mode" (toggle in top right)
-4. Click "Load unpacked" button
-5. Select the folder containing this extension
-6. The extension icon should appear in your toolbar
+1. **Install Copy Bear** from the [Chrome Web Store](https://chromewebstore.google.com/detail/copy-title-url/hbklhjjjhdjmnbelfbijaenabkpmnbbe).
+2. Visit any page you like (picnic optional).
+3. Click the Copy Bear icon:
 
-## Usage
+   - **Single click**: Title + URL (plain)
+   - **Double click**: Markdown link
+   - **Triple click**: Title only
 
-### Default Behavior (Out of the Box)
+4. Highlight multiple tabs for maximum bear power!
+5. Paste anywhere: docs, messages, honey jars, etc.
 
-- **Single Click**: Copy title and URL in plain text format
-- **Double Click**: Copy title and URL as markdown link
-- **Triple Click**: Copy just the page title
+---
 
-### Customizing Actions and Formats
+## 🧸 Example Outputs
 
-1. Right-click the extension icon and select "Options" (or go to `chrome://extensions/` and click "Options" for this extension)
-2. Configure each click type with:
-   - **Action Type**: Choose between "Copy to Clipboard" or "Open URL"
-   - **Format Template**: Customize using available variables
-3. Click "Save Settings" to apply your changes
+- **Plain**:
 
-### Available Variables
+  ```
+  Why Bears Love Berries
+  https://example.com/berries
+  ```
 
-Use these variables in your custom format templates:
+- **Markdown**:
 
-- `<title>` - The page title
-- `<url>` - The page URL
-- `<quote>` - The selected text on the page
+  ```
+  [Why Bears Love Berries](https://example.com/berries)
+  ```
 
-### Action Types
+- **Title only**:
 
-#### Copy to Clipboard
+  ```
+  Why Bears Love Berries
+  ```
 
-Copies the formatted text to your clipboard for pasting elsewhere.
+---
 
-#### Open URL
+## 🎨 Customization
 
-Opens the formatted text as a URL in a new tab. Perfect for:
+- Right-click Copy Bear’s icon → **Options**
+- Choose your paw-some format for each click style
+- Use `<title>`, `<url>`, and `<quote>` for your templates
+- Save and go back to lazing in the sun
 
-- URL shorteners
-- Search engines (e.g., `https://google.com/search?q=<title>`)
-- AI tools (e.g., `https://chatgpt.com?q=Summarize <url>`)
-- Social sharing
+---
 
-### Example Custom Formats
+## 💌 Why Choose Copy Bear?
 
-#### For Copy Actions:
+Because life’s too short for manual copying. With Copy Bear, every click is a bear hug for your clipboard. Fast, reliable, and always ready for another snack—I mean, copy.
 
-- **Plain text**: `<title>\n<url>`
-- **Markdown link**: `[<title>](<url>)`
-- **HTML link**: `<a href="<url>"><title></a>`
-- **Title only**: `<title>`
-- **Citation format**: `<title>. Retrieved from <url>`
-- **Quote with source**: `"<quote>" - <title> (<url>)`
+---
 
-#### For Open URL Actions:
+## 🐻‍❄️ FAQ
 
-- **Search title in Google**: `https://google.com/search?q=<title>`
-- **Summarize with ChatGPT**: `https://chatgpt.com?q=Summarize this: <url>`
-- **Share on Twitter**: `https://twitter.com/intent/tweet?text=<title>&url=<url>`
-- **Save to Pocket**: `https://getpocket.com/save?url=<url>`
+**Q:** Can Copy Bear handle lots of tabs?
+**A:** Of course! The more, the bear-ier.
 
-### Visual Feedback
+**Q:** Is Copy Bear grumpy if I click too fast?
+**A:** No way! This bear is trained for triple-click acrobatics.
 
-- ✔️ Green badge appears for successful operations
-- 🔗 Link icon for successful URL opening
-- ⚠️ Red badge appears for errors
-- Badge automatically disappears after 3 seconds
+**Q:** Will Copy Bear eat my homework?
+**A:** Only if it’s made of honey.
 
-## Permissions
+---
 
-This extension requires the following permissions:
+## 🧸 License
 
-- `activeTab`: To access the current tab's title and URL
-- `scripting`: To execute the clipboard copy function
-- `clipboardWrite`: To write content to the clipboard
-- `storage`: To save your custom format preferences
-- `action`: To display badge text on the extension icon
+MIT. Free to use, share, and spread the beary good word.
 
-## Default Output Formats
+---
 
-### Plain Text Format (Single Click)
-
-```
-Page Title
-https://example.com/page-url
-```
-
-Perfect for sharing links, plain text documentation, or general copying needs.
-
-### Markdown Link Format (Double Click)
-
-```
-[Page Title](https://example.com/page-url)
-```
-
-Perfect for markdown documents, GitHub issues/PRs, documentation, or any markdown-compatible platform.
-
-### Title Only Format (Triple Click)
-
-```
-Page Title
-```
-
-Perfect when you only need the page title for references or notes.
-
-## Click Detection
-
-The extension uses intelligent click detection:
-
-- **500ms window** to distinguish between single, double, and triple clicks
-- Single clicks are processed after the multi-click window expires
-- Double and triple clicks immediately trigger their respective actions
-- Reliable detection works consistently across different system configurations
-
-## Configuration
-
-### Accessing Options
-
-1. **Right-click method**: Right-click the extension icon → select "Options"
-2. **Extensions page method**: Go to `chrome://extensions/` → find "Copy Title & URL" → click "Options"
-
-### Settings Interface
-
-The options page provides:
-
-- **Visual table layout** for easy configuration
-- **Real-time format switching** when changing action types
-- **Helpful variable documentation** and action type explanations
-- **Save/Reset functionality** with status feedback
-- **Responsive design** that works on all screen sizes
-
-### Settings Persistence
-
-- All settings are saved to Chrome's sync storage
-- Settings sync across your Chrome profile on different devices
-- Automatic fallback to defaults if settings become corrupted
-
-## Development
-
-Built using Chrome Extension Manifest V3 with modern APIs:
-
-- Service worker background script
-- Chrome Actions API for icon interactions
-- Chrome Scripting API for clipboard access
-- Chrome Storage API for settings persistence
-- Fallback clipboard methods for maximum compatibility
-- Comprehensive options page with real-time updates
-
-## License
-
-MIT License - see LICENSE file for details.
+**Copy Bear — The cuddliest copy tool in the forest.**

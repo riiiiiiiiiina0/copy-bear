@@ -38,11 +38,9 @@
 <body class="p-4 sm:p-6 lg:p-8">
   <div class="max-w-6xl mx-auto bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-lg">
     <header class="flex items-center mb-8 pb-6 border-b border-gray-200 dark:border-slate-700">
-      <span class="material-icons-outlined text-blue-600 dark:text-blue-400 text-4xl mr-4">
-        link
-      </span>
+      <img src="icon-128x128.png" alt="Copy Bear icon" class="w-12 h-12 mr-4" />
       <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-slate-100">Copy Title &amp; URL</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-slate-100">Copy Bear</h1>
         <p class="text-gray-500 dark:text-slate-400">Extension Options</p>
       </div>
     </header>
@@ -55,15 +53,21 @@
           </h2>
           <ul class="space-y-2 text-gray-600 dark:text-slate-300">
             <li class="flex items-center">
-              <code class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-mono px-2 py-1 rounded-md text-sm clickable" data-copy="<title>">&lt;title&gt;</code>
+              <code
+                class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-mono px-2 py-1 rounded-md text-sm clickable"
+                data-copy="<title>">&lt;title&gt;</code>
               <span class="ml-2">- The page title</span>
             </li>
             <li class="flex items-center">
-              <code class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-mono px-2 py-1 rounded-md text-sm clickable" data-copy="<url>">&lt;url&gt;</code>
+              <code
+                class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-mono px-2 py-1 rounded-md text-sm clickable"
+                data-copy="<url>">&lt;url&gt;</code>
               <span class="ml-2">- The page URL</span>
             </li>
             <li class="flex items-center">
-              <code class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-mono px-2 py-1 rounded-md text-sm clickable" data-copy="<quote>">&lt;quote&gt;</code>
+              <code
+                class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-mono px-2 py-1 rounded-md text-sm clickable"
+                data-copy="<quote>">&lt;quote&gt;</code>
               <span class="ml-2">- The selected text on the page</span>
             </li>
           </ul>
@@ -90,7 +94,8 @@
             <div>
               <h3 class="font-semibold text-gray-700 dark:text-slate-200">Keyboard Shortcut:</h3>
               <p class="mt-1">Activate with
-                <kbd id="shortcut-key" class="bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-slate-200 px-2 py-1 rounded-md font-mono text-sm">Cmd+Shift+1</kbd>.
+                <kbd id="shortcut-key"
+                  class="bg-gray-200 dark:bg-slate-600 text-gray-800 dark:text-slate-200 px-2 py-1 rounded-md font-mono text-sm">Cmd+Shift+1</kbd>.
                 Customize at
                 <a class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline"
                   href="chrome://extensions/shortcuts">chrome://extensions/shortcuts</a>.
@@ -124,14 +129,16 @@
         </div>
       </aside>
       <main class="lg:col-span-2">
-        <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100 rounded-xl p-6 mb-8">
+        <div
+          class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100 rounded-xl p-6 mb-8">
           <h2 class="text-xl font-bold flex items-center">
             <span class="material-icons-outlined mr-2">settings</span>General Settings
           </h2>
         </div>
         <div class="space-y-4 mb-8">
           <div class="flex items-center">
-            <input type="checkbox" id="autoSaveScreenshot" name="autoSaveScreenshot" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+            <input type="checkbox" id="autoSaveScreenshot" name="autoSaveScreenshot"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
             <label for="autoSaveScreenshot" class="ml-2 block text-sm text-gray-900 dark:text-slate-100">
               Auto-save screenshots
             </label>
@@ -140,11 +147,15 @@
             <label for="screenshotSavePath" class="block text-sm font-medium text-gray-700 dark:text-slate-300">
               Save screenshots to (e.g. "Screenshots/"):
             </label>
-            <input type="text" id="screenshotSavePath" name="screenshotSavePath" placeholder="Default: Chrome's download folder" class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500">
-            <p class="text-xs text-gray-500 dark:text-slate-400">If left empty, screenshots will be saved in Chrome's default download folder.</p>
+            <input type="text" id="screenshotSavePath" name="screenshotSavePath"
+              placeholder="Default: Chrome's download folder"
+              class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500">
+            <p class="text-xs text-gray-500 dark:text-slate-400">If left empty, screenshots will be saved in Chrome's
+              default download folder.</p>
           </div>
         </div>
-        <div class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100 rounded-xl p-6 mb-8">
+        <div
+          class="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100 rounded-xl p-6 mb-8">
           <h2 class="text-xl font-bold flex items-center">
             <span class="material-icons-outlined mr-2">tune</span>Format Templates
           </h2>
@@ -155,32 +166,47 @@
           <div class="space-y-8">
             <!-- Single Click -->
             <div>
-              <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2" for="single-click-type">Single Click</label>
-              <select id="single-click-type" name="singleClickFormatType" class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
+              <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2"
+                for="single-click-type">Single Click</label>
+              <select id="single-click-type" name="singleClickFormatType"
+                class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
                 <!-- Options will be populated by JS, but we can put them here for SSR/no-JS fallback -->
               </select>
-              <textarea id="single-click-custom-format" name="singleClickCustomFormat" rows="3" placeholder="Enter custom format..." class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500" style="display: none;"></textarea>
+              <textarea id="single-click-custom-format" name="singleClickCustomFormat" rows="3"
+                placeholder="Enter custom format..."
+                class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500"
+                style="display: none;"></textarea>
               <!-- Hidden textarea to store the actual format string, to be used by background script. This simplifies storage logic. -->
               <textarea id="single-click-format" name="singleClickFormat" class="hidden" rows="1"></textarea>
             </div>
 
             <!-- Double Click -->
             <div>
-              <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2" for="double-click-type">Double Click</label>
-              <select id="double-click-type" name="doubleClickFormatType" class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
+              <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2"
+                for="double-click-type">Double Click</label>
+              <select id="double-click-type" name="doubleClickFormatType"
+                class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
                 <!-- Options will be populated by JS -->
               </select>
-              <textarea id="double-click-custom-format" name="doubleClickCustomFormat" rows="3" placeholder="Enter custom format..." class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500" style="display: none;"></textarea>
+              <textarea id="double-click-custom-format" name="doubleClickCustomFormat" rows="3"
+                placeholder="Enter custom format..."
+                class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500"
+                style="display: none;"></textarea>
               <textarea id="double-click-format" name="doubleClickFormat" class="hidden" rows="1"></textarea>
             </div>
 
             <!-- Triple Click -->
             <div>
-              <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2" for="triple-click-type">Triple Click</label>
-              <select id="triple-click-type" name="tripleClickFormatType" class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
+              <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2"
+                for="triple-click-type">Triple Click</label>
+              <select id="triple-click-type" name="tripleClickFormatType"
+                class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
                 <!-- Options will be populated by JS -->
               </select>
-              <textarea id="triple-click-custom-format" name="tripleClickCustomFormat" rows="3" placeholder="Enter custom format..." class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500" style="display: none;"></textarea>
+              <textarea id="triple-click-custom-format" name="tripleClickCustomFormat" rows="3"
+                placeholder="Enter custom format..."
+                class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500"
+                style="display: none;"></textarea>
               <textarea id="triple-click-format" name="tripleClickFormat" class="hidden" rows="1"></textarea>
             </div>
           </div>

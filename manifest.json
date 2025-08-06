@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Copy Title & URL",
+  "name": "Copy Bear",
   "version": "1.15",
-  "description": "Copy the current tab's title and URL to clipboard with one click",
+  "description": "Quickly copy page titles and URLs with customizable formatting, as easy as a bear grabbing honey.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -31,9 +31,10 @@
   },
   "options_page": "options.html",
   "icons": {
-    "16": "icon-16.png",
-    "48": "icon-48.png",
-    "128": "icon-128.png"
+    "16": "icon-16x16.png",
+    "32": "icon-32x32.png",
+    "48": "icon-48x48.png",
+    "128": "icon-128x128.png"
   },
   "web_accessible_resources": [
     {
