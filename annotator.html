@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Annotator</title>
+    <script src="./libs/tailwindcss-3.4.16.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <style type="text/tailwindcss">
+        body {
+            font-family: 'Inter', sans-serif;
+            @apply bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-50;
+        }
+        .tool-btn {
+            @apply p-2 rounded-lg cursor-pointer transition-colors duration-150;
+            @apply text-slate-600 dark:text-slate-300;
+            @apply hover:bg-slate-200 dark:hover:bg-slate-700;
+        }
+        .tool-btn.active {
+            @apply bg-blue-500 text-white;
+            @apply dark:bg-blue-600 dark:text-white;
+        }
+        canvas {
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+    <header class="bg-white dark:bg-slate-800 shadow-md p-2 z-10">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold">Annotate Screenshot</h1>
+            </div>
+            <div id="toolbar" class="flex items-center space-x-2">
+                <button id="text-tool" class="tool-btn" data-tool="text" title="Text"><span class="material-icons-outlined">title</span></button>
+                <button id="rect-tool" class="tool-btn active" data-tool="rect" title="Rectangle"><span class="material-icons-outlined">check_box_outline_blank</span></button>
+                <button id="circle-tool" class="tool-btn" data-tool="circle" title="Circle"><span class="material-icons-outlined">radio_button_unchecked</span></button>
+                <button id="arrow-tool" class="tool-btn" data-tool="arrow" title="Arrow"><span class="material-icons-outlined">arrow_forward</span></button>
+                <button id="line-tool" class="tool-btn" data-tool="line" title="Line"><span class="material-icons-outlined">horizontal_rule</span></button>
+                <button id="blur-tool" class="tool-btn" data-tool="blur" title="Blur"><span class="material-icons-outlined">blur_on</span></button>
+
+                <div class="h-8 w-px bg-slate-300 dark:bg-slate-600 mx-2"></div>
+
+                <div class="flex items-center space-x-2" title="Stroke Color">
+                    <span class="material-icons-outlined text-slate-600 dark:text-slate-300">border_color</span>
+                    <input type="color" id="stroke-color" value="#ff0000" class="w-8 h-8 p-0 border-none rounded cursor-pointer">
+                </div>
+                 <div class="flex items-center space-x-2" title="Stroke Width">
+                    <span class="material-icons-outlined text-slate-600 dark:text-slate-300">line_weight</span>
+                    <input type="range" id="stroke-width" min="1" max="20" value="5" class="w-24 cursor-pointer">
+                </div>
+
+                <div class="h-8 w-px bg-slate-300 dark:bg-slate-600 mx-2"></div>
+
+                <button id="undo-btn" class="tool-btn" title="Undo"><span class="material-icons-outlined">undo</span></button>
+            </div>
+            <div class="flex items-center space-x-4">
+                 <button id="copy-btn" class="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-150 ease-in-out">
+                    <span class="material-icons-outlined">content_copy</span>
+                    Copy
+                </button>
+                <button id="download-btn" class="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-150 ease-in-out">
+                    <span class="material-icons-outlined">download</span>
+                    Download
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4 bg-slate-200 dark:bg-slate-900/50 overflow-auto">
+        <canvas id="canvas"></canvas>
+    </main>
+
+    <script src="annotator.js"></script>
+</body>
+</html>

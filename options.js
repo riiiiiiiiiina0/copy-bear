@@ -23,7 +23,11 @@ const PREDEFINED_FORMATS = {
     value: '<title> - <url>',
   },
   markdown: { name: 'Markdown', value: '[<title>](<url>)' },
-  screenshot: { name: 'Screenshot', value: '<screenshot>' }, // Added Screenshot option
+  screenshot: { name: 'Screenshot', value: '<screenshot>' },
+  screenshot_annotate: {
+    name: 'Screenshot & Annotate',
+    value: '<screenshot-annotate>',
+  },
   custom: { name: 'Custom Format', value: '' }, // Custom value will be from textarea
 };
 

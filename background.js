@@ -136,6 +136,14 @@ async function performClickAction(tabs, clickType) {
         showBadgeText('🖼️❌', true);
       }
       return; // Screenshot action is complete
+    } else if (formatTemplate === '<screenshot-annotate>') {
+      if (tabs.length > 0 && tabs[0].id) {
+        await captureAndOpenForAnnotation(tabs[0].id);
+      } else {
+        console.error('Cannot take screenshot without a valid tab ID.');
+        showBadgeText('🖼️❌', true);
+      }
+      return; // Screenshot & Annotate action is complete
     }
 
     const isUrlAction = isUrlFormat(formatTemplate);
@@ -319,6 +327,37 @@ async function captureAndCopyScreenshot(tabId) {
   } catch (error) {
     console.error('Failed to capture and copy screenshot:', error);
     showBadgeText('🖼️❌', true); // Using a different error badge for screenshot specific error
+  }
+}
+
+/**
+ * Captures the visible part of the current tab and opens it in the annotator.
+ * @param {number} tabId - The ID of the tab to capture.
+ * @returns {Promise<void>} Promise that resolves when the operation is complete.
+ */
+async function captureAndOpenForAnnotation(tabId) {
+  try {
+    // Capture the visible tab as a PNG data URL
+    const dataUrl = await chrome.tabs.captureVisibleTab({
+      format: 'png',
+    });
+    if (!dataUrl) {
+      throw new Error('Failed to capture tab: dataUrl is empty.');
+    }
+
+    // Store the screenshot data URL in local storage to be picked up by the annotator page
+    await chrome.storage.local.set({ screenshotDataUrl: dataUrl });
+
+    // Open the annotator page in a new tab
+    await chrome.tabs.create({
+      url: chrome.runtime.getURL('annotator.html'),
+    });
+
+    // Optional: show a badge to indicate success
+    showBadgeText('✏️');
+  } catch (error) {
+    console.error('Failed to capture and open for annotation:', error);
+    showBadgeText('🖼️❌', true);
   }
 }
 
