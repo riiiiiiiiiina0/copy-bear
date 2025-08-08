@@ -1,220 +1,513 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const toolbar = document.getElementById('toolbar');
-    const strokeColorInput = document.getElementById('stroke-color');
-    const strokeWidthInput = document.getElementById('stroke-width');
-    const undoBtn = document.getElementById('undo-btn');
-    const copyBtn = document.getElementById('copy-btn');
-    const downloadBtn = document.getElementById('download-btn');
 
-    let isDrawing = false;
-    let currentTool = 'rect';
-    let startX, startY;
-    let strokeColor = strokeColorInput.value;
-    let strokeWidth = strokeWidthInput.value;
+    class Annotator {
+        constructor(canvas) {
+            this.canvas = canvas;
+            this.ctx = canvas.getContext('2d');
+            this.annotations = [];
+            this.isDrawing = false;
+            this.isDragging = false;
+            this.isResizing = false;
+            this.isShiftPressed = false;
 
-    let undoStack = [];
-    let originalImage;
+            this.currentTool = 'select';
+            this.strokeColor = '#ff0000';
+            this.strokeWidth = 5;
 
-    // Load screenshot from storage
-    chrome.storage.local.get('screenshotDataUrl', (result) => {
-        if (result.screenshotDataUrl) {
-            const img = new Image();
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                originalImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                saveState();
-                // Clean up storage
-                chrome.storage.local.remove('screenshotDataUrl');
+            this.selectedObject = null;
+            this.currentShape = null;
+            this.activeHandle = null;
+
+            this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+            this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+            this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
+            this.canvas.addEventListener('dblclick', this.onDoubleClick.bind(this));
+
+            window.addEventListener('keydown', (e) => { if (e.key === 'Shift') this.isShiftPressed = true; this.updateCursor(); });
+            window.addEventListener('keyup', (e) => { if (e.key === 'Shift') this.isShiftPressed = false; this.updateCursor(); });
+
+            this.loadScreenshot();
+        }
+
+        loadScreenshot() {
+            chrome.storage.local.get('screenshotDataUrl', (result) => {
+                if (result.screenshotDataUrl) {
+                    const img = new Image();
+                    this.backgroundImage = img;
+                    img.onload = () => {
+                        this.canvas.width = img.width;
+                        this.canvas.height = img.height;
+                        this.render();
+                        chrome.storage.local.remove('screenshotDataUrl');
+                    };
+                    img.src = result.screenshotDataUrl;
+                }
+            });
+        }
+
+        render() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            if (this.backgroundImage) {
+                this.ctx.drawImage(this.backgroundImage, 0, 0);
+            }
+            this.annotations.forEach(annotation => annotation.draw(this.ctx));
+            if (this.isDrawing && this.currentShape) {
+                this.currentShape.draw(this.ctx);
+            }
+            if (this.selectedObject) {
+                this.selectedObject.drawHandles(this.ctx);
+            }
+        }
+
+        getMousePos(evt) {
+            const rect = this.canvas.getBoundingClientRect();
+            const scaleX = this.canvas.width / rect.width;
+            const scaleY = this.canvas.height / rect.height;
+            return {
+                x: (evt.clientX - rect.left) * scaleX,
+                y: (evt.clientY - rect.top) * scaleY
             };
-            img.src = result.screenshotDataUrl;
-        } else {
-            console.error('No screenshot data URL found.');
-            // Handle error, maybe show a message to the user
         }
-    });
 
-    function saveState() {
-        undoStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-    }
+        onMouseDown(e) {
+            const pos = this.getMousePos(e);
+            this.dragStartX = pos.x;
+            this.dragStartY = pos.y;
 
-    function restoreState() {
-        if (undoStack.length > 1) {
-            undoStack.pop();
-            ctx.putImageData(undoStack[undoStack.length - 1], 0, 0);
+            if (this.currentTool === 'select') {
+                if (this.selectedObject) {
+                    this.activeHandle = this.selectedObject.getHandleAt(pos.x, pos.y);
+                }
+
+                if (this.activeHandle) {
+                    this.isResizing = true;
+                } else {
+                    const clickedObject = this.getObjectAt(pos.x, pos.y);
+                    if (clickedObject) {
+                        this.selectedObject = clickedObject;
+                        this.isDragging = true;
+                    } else {
+                        this.selectedObject = null;
+                    }
+                }
+            } else if (this.currentTool === 'text') {
+                this.createTextArea(pos.x, pos.y);
+            } else {
+                this.isDrawing = true;
+                this.selectedObject = null;
+                this.drawStartX = pos.x;
+                this.drawStartY = pos.y;
+                switch(this.currentTool) {
+                    case 'rect':
+                        this.currentShape = new Rectangle(this.drawStartX, this.drawStartY, this.strokeColor, this.strokeWidth);
+                        break;
+                    case 'circle':
+                        this.currentShape = new Ellipse(this.drawStartX, this.drawStartY, this.strokeColor, this.strokeWidth);
+                        break;
+                    case 'line':
+                        this.currentShape = new Line(this.drawStartX, this.drawStartY, this.strokeColor, this.strokeWidth);
+                        break;
+                    case 'arrow':
+                        this.currentShape = new Arrow(this.drawStartX, this.drawStartY, this.strokeColor, this.strokeWidth);
+                        break;
+                }
+            }
+            this.render();
+        }
+
+        onMouseMove(e) {
+            const pos = this.getMousePos(e);
+            if (this.isResizing && this.selectedObject && this.activeHandle) {
+                this.selectedObject.resizeByHandle(pos.x, pos.y, this.activeHandle);
+            } else if (this.isDragging && this.selectedObject) {
+                const dx = pos.x - this.dragStartX;
+                const dy = pos.y - this.dragStartY;
+                this.selectedObject.move(dx, dy);
+                this.dragStartX = pos.x;
+                this.dragStartY = pos.y;
+            } else if (this.isDrawing && this.currentShape) {
+                this.currentShape.resize(pos.x, pos.y, this.drawStartX, this.drawStartY, this.isShiftPressed);
+            }
+            this.updateCursor(e);
+            this.render();
+        }
+
+        onMouseUp(e) {
+            if (this.isDrawing) {
+                if (this.currentShape) {
+                    this.annotations.push(this.currentShape);
+                    this.currentShape = null;
+                }
+            }
+            this.isDrawing = false;
+            this.isDragging = false;
+            this.isResizing = false;
+            this.activeHandle = null;
+        }
+
+        onDoubleClick(e) {
+            const pos = this.getMousePos(e);
+            const clickedObject = this.getObjectAt(pos.x, pos.y);
+            if (clickedObject && clickedObject instanceof Text) {
+                this.selectedObject = clickedObject;
+                this.createTextArea(clickedObject.x, clickedObject.y, clickedObject);
+            }
+        }
+
+        createTextArea(x, y, existingText = null) {
+            const textarea = document.createElement('textarea');
+            const rect = this.canvas.getBoundingClientRect();
+            const scaleX = rect.width / this.canvas.width;
+            const scaleY = rect.height / this.canvas.height;
+
+            textarea.style.position = 'absolute';
+            textarea.style.left = `${rect.left + x * scaleX}px`;
+            textarea.style.top = `${rect.top + y * scaleY}px`;
+            textarea.style.border = '1px dashed #ccc';
+            textarea.style.outline = 'none';
+            textarea.style.padding = '0';
+            textarea.style.margin = '0';
+            textarea.style.background = 'rgba(255, 255, 255, 0.9)';
+            textarea.style.color = this.strokeColor;
+            textarea.style.fontSize = `${this.strokeWidth * 4 * scaleY}px`;
+            textarea.style.fontFamily = 'sans-serif';
+            textarea.style.resize = 'none';
+            textarea.style.overflow = 'hidden';
+            textarea.style.lineHeight = '1';
+            textarea.style.transformOrigin = 'top left';
+            textarea.style.transform = `scale(${scaleX}, ${scaleY})`;
+
+            if (existingText) {
+                textarea.value = existingText.text;
+                this.annotations = this.annotations.filter(a => a !== existingText);
+            }
+
+            document.body.appendChild(textarea);
+            textarea.focus();
+
+            const finalize = () => {
+                const textValue = textarea.value.trim();
+                if (textValue) {
+                    const newText = new Text(x, y, textValue, this.strokeColor, this.strokeWidth * 4);
+                    this.annotations.push(newText);
+                }
+                document.body.removeChild(textarea);
+                this.selectedObject = null;
+                this.render();
+            };
+
+            textarea.addEventListener('blur', finalize);
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    finalize();
+                }
+            });
+        }
+
+        getObjectAt(x, y) {
+            for (let i = this.annotations.length - 1; i >= 0; i--) {
+                if (this.annotations[i].isHit(x, y)) {
+                    return this.annotations[i];
+                }
+            }
+            return null;
+        }
+
+        updateCursor(e) {
+            if (this.currentTool === 'select') {
+                const pos = e ? this.getMousePos(e) : null;
+                let cursor = 'default';
+                if (this.selectedObject && pos) {
+                    const handle = this.selectedObject.getHandleAt(pos.x, pos.y);
+                    if (handle) {
+                        cursor = handle.cursor;
+                    } else if (this.getObjectAt(pos.x, pos.y)) {
+                        cursor = 'move';
+                    }
+                } else if (pos && this.getObjectAt(pos.x, pos.y)) {
+                    cursor = 'pointer';
+                }
+                this.canvas.style.cursor = cursor;
+            } else {
+                 this.canvas.style.cursor = this.currentTool === 'text' ? 'text' : 'crosshair';
+            }
+        }
+
+        setTool(tool) {
+            this.currentTool = tool;
+            this.updateCursor();
+            if (tool !== 'select') {
+                this.selectedObject = null;
+                this.render();
+            }
+        }
+
+        setStrokeColor(color) {
+            this.strokeColor = color;
+            if (this.selectedObject) {
+                this.selectedObject.strokeColor = color;
+                this.render();
+            }
+        }
+
+        setStrokeWidth(width) {
+            this.strokeWidth = width;
+            if (this.selectedObject && !(this.selectedObject instanceof Text)) {
+                this.selectedObject.strokeWidth = width;
+                this.render();
+            }
+        }
+
+        undo() {
+            if (this.annotations.length > 0) {
+                this.annotations.pop();
+                this.selectedObject = null;
+                this.render();
+            }
         }
     }
 
-    function getMousePos(evt) {
-        const rect = canvas.getBoundingClientRect();
-        return {
-            x: evt.clientX - rect.left,
-            y: evt.clientY - rect.top
-        };
+    class Annotation {
+        constructor(x, y, strokeColor, strokeWidth) {
+            this.x = x; this.y = y; this.strokeColor = strokeColor; this.strokeWidth = strokeWidth;
+        }
+        draw(ctx) {}
+        isHit(x, y) { return false; }
+        move(dx, dy) { this.x += dx; this.y += dy; }
+        drawHandles(ctx) {}
+        resize(newX, newY, startX, startY, isShiftPressed) {}
+        getHandleAt(x, y) { return null; }
+        resizeByHandle(x, y, handleName) {}
     }
 
-    function startDrawing(e) {
-        isDrawing = true;
-        const pos = getMousePos(e);
-        startX = pos.x;
-        startY = pos.y;
-        saveState();
-    }
+    class Rectangle extends Annotation {
+        constructor(x, y, strokeColor, strokeWidth) {
+            super(x, y, strokeColor, strokeWidth);
+            this.w = 0; this.h = 0;
+        }
 
-    function draw(e) {
-        if (!isDrawing) return;
+        draw(ctx) {
+            ctx.strokeStyle = this.strokeColor;
+            ctx.lineWidth = this.strokeWidth;
+            ctx.strokeRect(this.x, this.y, this.w, this.h);
+        }
 
-        const pos = getMousePos(e);
-        const currentX = pos.x;
-        const currentY = pos.y;
+        resize(newX, newY, startX, startY) {
+            this.x = Math.min(newX, startX);
+            this.y = Math.min(newY, startY);
+            this.w = Math.abs(newX - startX);
+            this.h = Math.abs(newY - startY);
+        }
 
-        // Restore the last saved state before drawing the new shape
-        ctx.putImageData(undoStack[undoStack.length - 1], 0, 0);
+        isHit(x, y) {
+            return (x >= this.x && x <= this.x + this.w && y >= this.y && y <= this.y + this.h);
+        }
 
-        ctx.beginPath();
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = strokeWidth;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        getHandles() {
+            return [
+                { name: 'top-left', x: this.x, y: this.y, cursor: 'nwse-resize' },
+                { name: 'top-right', x: this.x + this.w, y: this.y, cursor: 'nesw-resize' },
+                { name: 'bottom-left', x: this.x, y: this.y + this.h, cursor: 'nesw-resize' },
+                { name: 'bottom-right', x: this.x + this.w, y: this.y + this.h, cursor: 'nwse-resize' },
+            ];
+        }
 
-        switch (currentTool) {
-            case 'rect':
-                ctx.strokeRect(startX, startY, currentX - startX, currentY - startY);
-                break;
-            case 'circle':
-                const radius = Math.sqrt(Math.pow(currentX - startX, 2) + Math.pow(currentY - startY, 2));
-                ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
-                ctx.stroke();
-                break;
-            case 'line':
-                ctx.moveTo(startX, startY);
-                ctx.lineTo(currentX, currentY);
-                ctx.stroke();
-                break;
-            case 'arrow':
-                drawArrow(startX, startY, currentX, currentY);
-                break;
-            case 'blur':
-                 // The blur will be applied on mouseup
-                break;
+        getHandleAt(x, y) {
+            for (const handle of this.getHandles()) {
+                if (Math.abs(x - handle.x) <= 5 && Math.abs(y - handle.y) <= 5) {
+                    return handle;
+                }
+            }
+            return null;
+        }
+
+        resizeByHandle(x, y, handleName) {
+            const oldX2 = this.x + this.w;
+            const oldY2 = this.y + this.h;
+            switch(handleName) {
+                case 'top-left': this.x = x; this.y = y; this.w = oldX2 - x; this.h = oldY2 - y; break;
+                case 'top-right': this.y = y; this.w = x - this.x; this.h = oldY2 - y; break;
+                case 'bottom-left': this.x = x; this.w = oldX2 - x; this.h = y - this.y; break;
+                case 'bottom-right': this.w = x - this.x; this.h = y - this.y; break;
+            }
+        }
+
+        drawHandles(ctx) {
+            this.getHandles().forEach(handle => {
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 1;
+                ctx.fillRect(handle.x - 4, handle.y - 4, 8, 8);
+                ctx.strokeRect(handle.x - 4, handle.y - 4, 8, 8);
+            });
         }
     }
 
-    function stopDrawing(e) {
-        if (!isDrawing) return;
-        isDrawing = false;
+    class Ellipse extends Annotation {
+        constructor(x, y, strokeColor, strokeWidth) {
+            super(x, y, strokeColor, strokeWidth);
+            this.radiusX = 0; this.radiusY = 0;
+        }
 
-        if (currentTool === 'blur') {
-            const pos = getMousePos(e);
-            applyBlur(startX, startY, pos.x - startX, pos.y - startY);
+        draw(ctx) {
+            ctx.beginPath();
+            ctx.strokeStyle = this.strokeColor;
+            ctx.lineWidth = this.strokeWidth;
+            ctx.ellipse(this.x, this.y, this.radiusX, this.radiusY, 0, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        resize(newX, newY, startX, startY, isShiftPressed) {
+            let w = Math.abs(newX - startX);
+            let h = Math.abs(newY - startY);
+            if (isShiftPressed) { w = h = Math.max(w, h); }
+            this.radiusX = w / 2;
+            this.radiusY = h / 2;
+            this.x = startX + (newX - startX) / 2;
+            this.y = startY + (newY - startY) / 2;
+        }
+
+        isHit(x, y) {
+            if (this.radiusX === 0 || this.radiusY === 0) return false;
+            const p = ((x - this.x) ** 2) / (this.radiusX ** 2);
+            const q = ((y - this.y) ** 2) / (this.radiusY ** 2);
+            return (p + q) <= 1;
+        }
+
+        drawHandles(ctx) {
+            ctx.setLineDash([6, 3]);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(this.x - this.radiusX, this.y - this.radiusY, this.radiusX * 2, this.radiusY * 2);
+            ctx.setLineDash([]);
         }
     }
 
-    function drawArrow(fromx, fromy, tox, toy) {
-        const headlen = strokeWidth * 5; // length of head in pixels
-        const dx = tox - fromx;
-        const dy = toy - fromy;
-        const angle = Math.atan2(dy, dx);
-        ctx.moveTo(fromx, fromy);
-        ctx.lineTo(tox, toy);
-        ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
-        ctx.moveTo(tox, toy);
-        ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
-        ctx.stroke();
+    class Line extends Annotation {
+        constructor(x, y, strokeColor, strokeWidth) {
+            super(x, y, strokeColor, strokeWidth);
+            this.x2 = x; this.y2 = y;
+        }
+        draw(ctx) {
+            ctx.beginPath();
+            ctx.strokeStyle = this.strokeColor;
+            ctx.lineWidth = this.strokeWidth;
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(this.x2, this.y2);
+            ctx.stroke();
+        }
+        resize(newX, newY) { this.x2 = newX; this.y2 = newY; }
+        isHit(x, y) { /* More complex hit detection needed for lines */ return false; }
+        move(dx, dy) { super.move(dx, dy); this.x2 += dx; this.y2 += dy; }
     }
 
-    function applyBlur(x, y, w, h) {
-        // Create a temporary canvas to draw the blurred section
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tempCtx = tempCanvas.getContext('2d');
-
-        // Put the original image on the temp canvas
-        tempCtx.putImageData(originalImage, 0, 0);
-
-        // Draw the blurred rectangle on the main canvas
-        ctx.save();
-        ctx.filter = 'blur(8px)';
-        ctx.drawImage(tempCanvas, x, y, w, h, x, y, w, h);
-        ctx.restore();
-
-        saveState(); // Save the state after applying blur
+    class Arrow extends Line {
+        draw(ctx) {
+            super.draw(ctx);
+            const headlen = this.strokeWidth * 3;
+            const angle = Math.atan2(this.y2 - this.y, this.x2 - this.x);
+            ctx.beginPath();
+            ctx.moveTo(this.x2, this.y2);
+            ctx.lineTo(this.x2 - headlen * Math.cos(angle - Math.PI / 6), this.y2 - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(this.x2, this.y2);
+            ctx.lineTo(this.x2 - headlen * Math.cos(angle + Math.PI / 6), this.y2 - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }
     }
 
+    class Text extends Annotation {
+        constructor(x, y, text, color, size) {
+            super(x, y, color, size);
+            this.text = text; this.font = 'sans-serif';
+        }
 
+        draw(ctx) {
+            ctx.fillStyle = this.strokeColor;
+            ctx.font = `${this.strokeWidth}px ${this.font}`;
+            ctx.textBaseline = 'top';
+            this.measureText(ctx);
+            const lines = this.text.split('\n');
+            lines.forEach((line, index) => {
+                ctx.fillText(line, this.x, this.y + (index * this.lineHeight));
+            });
+        }
+
+        measureText(ctx) {
+            const lines = this.text.split('\n');
+            this.lineHeight = this.strokeWidth * 1.2;
+            this.h = lines.length * this.lineHeight;
+            this.w = 0;
+            lines.forEach(line => {
+                this.w = Math.max(this.w, ctx.measureText(line).width);
+            });
+        }
+
+        isHit(x, y) {
+            return (x >= this.x && x <= this.x + this.w && y >= this.y && y <= this.y + this.h);
+        }
+
+        drawHandles(ctx) {
+            ctx.setLineDash([6, 3]);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(this.x, this.y, this.w, this.h);
+            ctx.setLineDash([]);
+        }
+    }
+
+    // --- Initialization ---
+    const canvas = document.getElementById('canvas');
+    const annotator = new Annotator(canvas);
+
+    const toolbar = document.getElementById('toolbar');
     toolbar.addEventListener('click', (e) => {
         const toolButton = e.target.closest('.tool-btn');
         if (toolButton && toolButton.dataset.tool) {
-            currentTool = toolButton.dataset.tool;
+            annotator.setTool(toolButton.dataset.tool);
             document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
             toolButton.classList.add('active');
         }
     });
 
-    strokeColorInput.addEventListener('change', (e) => {
-        strokeColor = e.target.value;
-    });
+    const strokeColorInput = document.getElementById('stroke-color');
+    strokeColorInput.addEventListener('change', (e) => annotator.setStrokeColor(e.target.value));
 
-    strokeWidthInput.addEventListener('input', (e) => {
-        strokeWidth = e.target.value;
-    });
+    const strokeWidthInput = document.getElementById('stroke-width');
+    strokeWidthInput.addEventListener('input', (e) => annotator.setStrokeWidth(e.target.value));
 
-    undoBtn.addEventListener('click', restoreState);
+    const undoBtn = document.getElementById('undo-btn');
+    undoBtn.addEventListener('click', () => annotator.undo());
 
+    const downloadBtn = document.getElementById('download-btn');
     downloadBtn.addEventListener('click', () => {
+        annotator.selectedObject = null;
+        annotator.render();
         const link = document.createElement('a');
         link.download = `screenshot-${Date.now()}.png`;
         link.href = canvas.toDataURL();
         link.click();
     });
 
+    const copyBtn = document.getElementById('copy-btn');
     copyBtn.addEventListener('click', () => {
+        annotator.selectedObject = null;
+        annotator.render();
         canvas.toBlob((blob) => {
             navigator.clipboard.write([
-                new ClipboardItem({
-                    'image/png': blob
-                })
+                new ClipboardItem({ 'image/png': blob })
             ]).then(() => {
-                alert('Image copied to clipboard!');
+                const copyBtnTextEl = copyBtn.querySelector('span:not(.material-icons-outlined)');
+                if (copyBtnTextEl) {
+                    const originalText = copyBtnTextEl.textContent;
+                    copyBtnTextEl.textContent = "Copied!";
+                    setTimeout(() => {
+                        copyBtnTextEl.textContent = originalText;
+                    }, 2000);
+                }
             }).catch(err => {
                 console.error('Failed to copy image:', err);
-                alert('Failed to copy image.');
             });
         });
-    });
-
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseleave', () => isDrawing = false);
-
-    // Text tool implementation
-    const textToolBtn = document.getElementById('text-tool');
-    textToolBtn.addEventListener('click', () => {
-        canvas.style.cursor = 'text';
-    });
-
-    // Revert cursor for other tools
-    ['rect-tool', 'circle-tool', 'arrow-tool', 'line-tool', 'blur-tool'].forEach(id => {
-        document.getElementById(id).addEventListener('click', () => {
-             canvas.style.cursor = 'crosshair';
-        });
-    });
-
-    canvas.addEventListener('click', (e) => {
-        if (currentTool === 'text') {
-            const pos = getMousePos(e);
-            const text = prompt('Enter text:');
-            if (text) {
-                ctx.font = `${strokeWidth * 4}px Inter, sans-serif`;
-                ctx.fillStyle = strokeColor;
-                ctx.fillText(text, pos.x, pos.y);
-                saveState();
-            }
-        }
     });
 });
