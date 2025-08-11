@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Copy Bear",
   "version": "1.18",
-  "description": "Quickly copy page titles and URLs with customizable formatting, as easy as a bear grabbing honey.",
+  "description": "One-click to copy selected tab(s) title, URL, and selected text in your favorite custom format.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -15,7 +15,7 @@
     "<all_urls>"
   ],
   "action": {
-    "default_title": "Copy title and URL to clipboard"
+    "default_title": "Copy in your custom format"
   },
   "commands": {
     "_execute_action": {
@@ -23,7 +23,7 @@
         "default": "Ctrl+Shift+1",
         "mac": "Command+Shift+1"
       },
-      "description": "Activate Copy Title & URL extension"
+      "description": "Copy selected tab(s) in your custom format"
     }
   },
   "background": {

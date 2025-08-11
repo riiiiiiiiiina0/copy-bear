@@ -1,100 +1,70 @@
-# 🐻‍❄️📋📸 Copy Bear
+## 🐻 Copy Bear — One‑click custom copy for your tabs
 
-> _Copy-paste like a pro-bear!_
-
-## What is Copy Bear?
-
-**Copy Bear** is your cuddly Chrome sidekick for copying page titles and URLs. With just one paw (okay, click), Copy Bear grabs the info you need and hands it over in your favorite style—plain text, markdown, and more! No more clumsy typing or awkward “what was that link again?” moments.
-
-Copy Bear makes research, writing, and sharing as easy as stealing honey from a picnic basket. 🍯
+**One single purpose:** copy selected tab(s) title, URL, and any selected text etc in exactly the format you like — with just one click on the action button.
 
 ![](./docs/poster.jpeg)
 
 <a href="https://buymeacoffee.com/riiiiiiiiiina" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
----
+### Why you’ll love it
 
-## 🐾 Features
+- **One click, done**: No fiddling. Click the bear, your text is ready to paste.
+- **Your format, your vibe**: Markdown, plain text, multi‑line… totally up to you.
+- **Works on many tabs**: Select multiple tabs and copy them all at once.
+- **Grabs selected text**: If you highlight text on a page, it’s included as a quote.
 
-- **Bear-fast copying**: Page title and URL in a single click!
-- **Multi-format support**: Plain text, markdown, you name it—Copy Bear does it all. Bear can even take screenshot too!
-- **Triple-click tricks**: Single, double, or triple click for different copy magic!
-- **Copy from many tabs**: Highlight a whole forest of tabs and Copy Bear gathers them all!
-- **Customizable templates**: Make your copied text as wild or as neat as you like.
-- **Clipboard champion**: Never fumble with CTRL+C again.
+### How it works
 
----
+- **Single click**: Copies using your Single‑click format (default is Title + Url in 2 lines).
+- **Double click**: Copies using your Double‑click format (default is Title + Url in markdown).
+- **Triple click**: Copies using your Triple‑click format (default is Title + Url in 1 line).
+- **Multi‑tab**: Select several tabs first, then click the bear to copy them all.
 
-## 🌲 How to Use
+Default shortcut: `Cmd+Shift+1` on macOS, `Ctrl+Shift+1` on Windows/Linux.
 
-1. **Install Copy Bear** from the [Chrome Web Store](https://chromewebstore.google.com/detail/copy-title-url/hbklhjjjhdjmnbelfbijaenabkpmnbbe).
-2. Visit any page you like (picnic optional).
-3. Click the Copy Bear icon:
+### Custom formats (tiny magic)
 
-   - **Single click**: Title + URL (plain)
-   - **Double click**: Markdown link
-   - **Triple click**: Title only
+Use placeholders to build your perfect output:
 
-4. Highlight multiple tabs for maximum bear power!
-5. Paste anywhere: docs, messages, honey jars, etc.
+- `<title>`: the tab’s title
+- `<url>`: the tab’s URL
+- `<quote>`: the text you selected on the page (if any)
+- `\n`: new line
 
----
+Examples:
 
-## 🧸 Example Outputs
+```text
+<title>\n<url>
+```
 
-- **Plain**:
+```text
+[<title>](<url>) — <quote>
+```
 
-  ```
-  Why Bears Love Berries
-  https://example.com/berries
-  ```
+```text
+<title> - <url>
+```
 
-- **Markdown**:
+### Set up your formats
 
-  ```
-  [Why Bears Love Berries](https://example.com/berries)
-  ```
+1. Right‑click the bear icon → Options, or open the extension’s Options page.
+2. Choose what each click does: Single, Double, Triple.
+3. Pick a preset or write your own custom format.
+4. Save. That’s it!
 
-- **Title only**:
+### Privacy
 
-  ```
-  Why Bears Love Berries
-  ```
+Copy Bear works locally in your browser. No account. No tracking. No data leaves your device.
 
----
+### Permissions, briefly
 
-## 🎨 Customization
+- **activeTab, tabs**: read the current tab(s) title/URL.
+- **clipboardWrite**: copy to your clipboard.
+- **storage**: save your formats and preferences.
 
-- Right-click Copy Bear’s icon → **Options**
-- Choose your paw-some format for each click style
-- Use `<title>`, `<url>`, and `<quote>` for your templates
-- Save and go back to lazing in the sun
+### Tips
 
----
+- Select several tabs with Shift/Cmd/Ctrl, then click the bear to copy them all.
+- If no text is selected on a page, `<quote>` simply becomes empty.
 
-## 💌 Why Choose Copy Bear?
-
-Because life’s too short for manual copying. With Copy Bear, every click is a bear hug for your clipboard. Fast, reliable, and always ready for another snack—I mean, copy.
-
----
-
-## 🐻‍❄️ FAQ
-
-**Q:** Can Copy Bear handle lots of tabs?
-**A:** Of course! The more, the bear-ier.
-
-**Q:** Is Copy Bear grumpy if I click too fast?
-**A:** No way! This bear is trained for triple-click acrobatics.
-
-**Q:** Will Copy Bear eat my homework?
-**A:** Only if it’s made of honey.
-
----
-
-## 🧸 License
-
-MIT. Free to use, share, and spread the beary good word.
-
----
-
-**Copy Bear — The cuddliest copy tool in the forest.**
+Have a cute idea for a preset? Share it with the bear 💌
