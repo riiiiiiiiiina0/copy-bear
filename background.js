@@ -6,6 +6,65 @@
  */
 
 /**
+ * Predefined format options, used for looking up names for the action button title.
+ * This should be kept in sync with the `PREDEFINED_FORMATS` in `options.js`.
+ * @type {Object<string, {name: string, value: string}>}
+ * @constant
+ */
+const ACTION_DESCRIPTIONS = {
+  title_url_2_lines: {
+    name: 'Title and url (2 lines)',
+    value: '<title>\\n<url>',
+  },
+  title_url_1_line: {
+    name: 'Title and url (1 line)',
+    value: '<title> - <url>',
+  },
+  markdown: { name: 'Markdown', value: '[<title>](<url>)' },
+  screenshot: { name: 'Screenshot', value: '<screenshot>' },
+  custom: { name: 'Custom format', value: '' }, // Note: 'value' is not used here, but kept for structure consistency
+};
+
+/**
+ * Default format configurations (refers to keys in PREDEFINED_FORMATS)
+ * @type {Object<string, string>}
+ * @constant
+ */
+const DEFAULT_FORMAT_TYPES = {
+  singleClickFormatType: 'title_url_2_lines',
+  doubleClickFormatType: 'markdown',
+  tripleClickFormatType: 'title_url_1_line',
+};
+
+/**
+ * Updates the action button's title based on the currently configured formats.
+ */
+async function updateActionButtonTitle() {
+  try {
+    const items = await chrome.storage.sync.get({
+      singleClickFormatType: DEFAULT_FORMAT_TYPES.singleClickFormatType,
+      doubleClickFormatType: DEFAULT_FORMAT_TYPES.doubleClickFormatType,
+      tripleClickFormatType: DEFAULT_FORMAT_TYPES.tripleClickFormatType,
+    });
+
+    const single =
+      ACTION_DESCRIPTIONS[items.singleClickFormatType]?.name || 'Unknown';
+    const double =
+      ACTION_DESCRIPTIONS[items.doubleClickFormatType]?.name || 'Unknown';
+    const triple =
+      ACTION_DESCRIPTIONS[items.tripleClickFormatType]?.name || 'Unknown';
+
+    const newTitle = `1️⃣ ${single} / 2️⃣ ${double} / 3️⃣ ${triple}`;
+
+    chrome.action.setTitle({ title: newTitle });
+  } catch (error) {
+    console.error('Error updating action button title:', error);
+    // Fallback to a generic title
+    chrome.action.setTitle({ title: 'Copy title & URL (settings error)' });
+  }
+}
+
+/**
  * Counter to track the number of clicks on the extension action button
  * @type {number}
  */
@@ -499,3 +558,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Note: captureAndCopyScreenshot has its own error badge '🖼️❌' for capture phase errors.
   // If content script copy fails for screenshot, it will use '⚠️'.
 });
+
+// -- listeners for updating the action button title --
+
+// Update the title when the extension is first installed or updated
+chrome.runtime.onInstalled.addListener(() => {
+  updateActionButtonTitle();
+});
+
+// Update the title when the user changes the settings
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'sync') {
+    const formatKeys = [
+      'singleClickFormatType',
+      'doubleClickFormatType',
+      'tripleClickFormatType',
+    ];
+    if (formatKeys.some((key) => key in changes)) {
+      updateActionButtonTitle();
+    }
+  }
+});
+
+// Call the function on startup
+updateActionButtonTitle();
