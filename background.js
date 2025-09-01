@@ -125,6 +125,9 @@ function removeUTMParams(urlString) {
       'utm_campaign',
       'utm_term',
       'utm_content',
+      'gclid',
+      'fbclid',
+      'msclkid',
     ];
     let paramsChanged = false;
 
