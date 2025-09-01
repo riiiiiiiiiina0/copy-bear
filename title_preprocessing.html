@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +15,7 @@
         }
     </style>
 </head>
+
 <body class="p-4 sm:p-6 lg:p-8">
     <div class="max-w-4xl mx-auto bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-2xl shadow-lg">
         <header class="flex items-center justify-between mb-8 pb-6 border-b border-gray-200 dark:border-slate-700">
@@ -24,7 +26,8 @@
                     <p class="text-gray-500 dark:text-slate-400">Define rules to modify page titles before copying.</p>
                 </div>
             </div>
-            <a href="options.html" class="flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 font-semibold rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-slate-600">
+            <a href="options.html"
+                class="flex items-center justify-center gap-2 px-4 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 font-semibold rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-slate-600">
                 <span class="material-icons-outlined">arrow_back</span>
                 Back to Options
             </a>
@@ -32,7 +35,8 @@
 
         <main>
             <div class="flex justify-end mb-6">
-                <button id="add-rule-btn" class="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">
+                <button id="add-rule-btn"
+                    class="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">
                     <span class="material-icons-outlined">add</span>
                     Add New Rule
                 </button>
@@ -43,7 +47,8 @@
             </div>
 
             <div class="mt-10 pt-6 border-t border-gray-200 dark:border-slate-700 flex justify-end">
-                <button id="save-rules-btn" class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">
+                <button id="save-rules-btn"
+                    class="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md">
                     <span class="material-icons-outlined">save</span>
                     Save All Rules
                 </button>
@@ -62,8 +67,10 @@
             </div>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">URL Starts With</label>
-                    <input type="text" placeholder="https://example.com/page" class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg font-mono text-sm bg-white dark:bg-slate-800 rule-url">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">URL Starts
+                        With</label>
+                    <input type="text" placeholder="https://example.com/page"
+                        class="w-full p-2 border border-gray-300 dark:border-slate-600 rounded-lg font-mono text-sm bg-white dark:bg-slate-800 rule-url">
                 </div>
                 <div class="actions-container space-y-2">
                     <!-- Actions will be dynamically inserted here -->
@@ -79,14 +86,18 @@
     <!-- Action Template -->
     <template id="action-template">
         <div class="flex items-center gap-2 p-2 rounded-md bg-gray-100 dark:bg-slate-600 action">
-            <select class="p-1 border border-gray-300 dark:border-slate-500 rounded-md bg-white dark:bg-slate-700 text-sm action-type">
+            <select
+                class="border border-gray-300 dark:border-slate-500 rounded-md bg-white dark:bg-slate-700 text-sm action-type">
                 <option value="add_prefix">Add Prefix</option>
                 <option value="add_suffix">Add Suffix</option>
                 <option value="remove">Remove</option>
                 <option value="replace">Replace</option>
             </select>
-            <input type="text" placeholder="Value" class="flex-grow p-1 border border-gray-300 dark:border-slate-500 rounded-md font-mono text-sm bg-white dark:bg-slate-800 action-value-1">
-            <input type="text" placeholder="New Value" class="flex-grow p-1 border border-gray-300 dark:border-slate-500 rounded-md font-mono text-sm bg-white dark:bg-slate-800 action-value-2" style="display: none;">
+            <input type="text" placeholder="Value"
+                class="flex-grow border border-gray-300 dark:border-slate-500 rounded-md font-mono text-sm bg-white dark:bg-slate-800 action-value-1">
+            <input type="text" placeholder="New Value"
+                class="flex-grow border border-gray-300 dark:border-slate-500 rounded-md font-mono text-sm bg-white dark:bg-slate-800 action-value-2"
+                style="display: none;">
             <button class="text-red-500 hover:text-red-700 remove-action-btn">
                 <span class="material-icons-outlined">remove_circle</span>
             </button>
@@ -95,4 +106,5 @@
 
     <script src="title_preprocessing.js"></script>
 </body>
+
 </html>
