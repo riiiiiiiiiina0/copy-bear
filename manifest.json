@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Copy Bear",
-  "version": "1.20",
+  "version": "1.21",
   "description": "One-click to copy selected tab(s) title, URL, and selected text in your favorite custom format.",
   "permissions": [
     "activeTab",
