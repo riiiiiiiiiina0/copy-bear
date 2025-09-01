@@ -147,6 +147,44 @@ function removeUTMParams(urlString) {
 }
 
 /**
+ * Applies title preprocessing rules to the given title based on the URL.
+ * @param {string} title - The original page title.
+ * @param {string} url - The page URL.
+ * @param {Array<Object>} rules - The array of preprocessing rules.
+ * @returns {string} The processed title.
+ */
+function applyTitlePreprocessing(title, url, rules) {
+    if (!rules || rules.length === 0) {
+        return title;
+    }
+
+    let processedTitle = title;
+
+    for (const rule of rules) {
+        if (url.startsWith(rule.url)) {
+            for (const action of rule.actions) {
+                switch (action.type) {
+                    case 'add_prefix':
+                        processedTitle = action.value1 + processedTitle;
+                        break;
+                    case 'add_suffix':
+                        processedTitle = processedTitle + action.value1;
+                        break;
+                    case 'remove':
+                        processedTitle = processedTitle.replaceAll(action.value1, '');
+                        break;
+                    case 'replace':
+                        processedTitle = processedTitle.replaceAll(action.value1, action.value2);
+                        break;
+                }
+            }
+        }
+    }
+
+    return processedTitle;
+}
+
+/**
  * Shows a badge on the extension icon with specified text and color
  * @param {string} text - The text to display on the badge
  * @param {boolean} [isError=false] - Whether this is an error state (affects color)
@@ -216,9 +254,13 @@ async function performClickAction(tabs, clickType) {
   }
 
   try {
-    const result = await chrome.storage.sync.get(FALLBACK_FORMATS);
+    const result = await chrome.storage.sync.get({
+        ...FALLBACK_FORMATS,
+        titlePreprocessingRules: [],
+    });
     const formatKey = `${clickType}ClickFormat`;
     let formatTemplate = result[formatKey] || FALLBACK_FORMATS[formatKey] || '';
+    const rules = result.titlePreprocessingRules;
 
     // Replace literal '\n' (from user input) with actual newline characters in the template
     formatTemplate = formatTemplate.replace(/\\n/g, '\n');
@@ -240,8 +282,9 @@ async function performClickAction(tabs, clickType) {
     let urlsToOpen = [];
 
     for (const tab of tabs) {
-      const title = tab.title || '';
+      let title = tab.title || '';
       const url = removeUTMParams(tab.url || '');
+      title = applyTitlePreprocessing(title, url, rules);
       let quote = '';
 
       // Get selected text for the current tab
