@@ -109,6 +109,41 @@ function isUrlFormat(format) {
 }
 
 /**
+ * Removes UTM tracking parameters from a URL string.
+ * @param {string} urlString - The URL to clean.
+ * @returns {string} The cleaned URL.
+ */
+function removeUTMParams(urlString) {
+  if (!urlString) {
+    return '';
+  }
+  try {
+    const url = new URL(urlString);
+    const paramsToRemove = [
+      'utm_source',
+      'utm_medium',
+      'utm_campaign',
+      'utm_term',
+      'utm_content',
+    ];
+    let paramsChanged = false;
+
+    for (const param of paramsToRemove) {
+      if (url.searchParams.has(param)) {
+        url.searchParams.delete(param);
+        paramsChanged = true;
+      }
+    }
+
+    // Only return a new string if params were removed, to preserve original URL if no changes were made.
+    return paramsChanged ? url.toString() : urlString;
+  } catch (error) {
+    console.error('Failed to parse URL for UTM removal:', error);
+    return urlString; // Return original URL on error
+  }
+}
+
+/**
  * Shows a badge on the extension icon with specified text and color
  * @param {string} text - The text to display on the badge
  * @param {boolean} [isError=false] - Whether this is an error state (affects color)
@@ -203,7 +238,7 @@ async function performClickAction(tabs, clickType) {
 
     for (const tab of tabs) {
       const title = tab.title || '';
-      const url = tab.url || '';
+      const url = removeUTMParams(tab.url || '');
       let quote = '';
 
       // Get selected text for the current tab
