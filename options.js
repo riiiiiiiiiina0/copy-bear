@@ -464,44 +464,63 @@ document.addEventListener('DOMContentLoaded', async () => {
 /**
  * Exports the current configuration to a JSON file
  */
-function exportConfig() {
-  const config = {
-    format: {
-      // Keep this structure for backward compatibility if possible
-      single: elements.singleClickFormatElement.value,
-      double: elements.doubleClickFormatElement.value,
-      triple: elements.tripleClickFormatElement.value,
-    },
-    // Optionally, also export the selected types if needed for a more complete backup
-    types: {
-      single: elements.singleClickTypeElement.value,
-      double: elements.doubleClickTypeElement.value,
-      triple: elements.tripleClickTypeElement.value,
-    },
-  };
+async function exportConfig() {
+  try {
+    // Fetch data from both sync and local storage
+    const syncData = await chrome.storage.sync.get({
+      titlePreprocessingRules: [],
+    });
+    const localData = await chrome.storage.local.get({
+      screenshotSavePath: '',
+    });
 
-  const jsonString = JSON.stringify(config, null, 2);
-  const blob = new Blob([jsonString], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
+    const config = {
+      version: 2, // Version number for the config format
+      autoSaveScreenshot: elements.autoSaveScreenshotElement.checked,
+      screenshotSavePath: localData.screenshotSavePath, // Use stored value
+      titlePreprocessingRules: syncData.titlePreprocessingRules,
+      formats: {
+        single: {
+          type: elements.singleClickTypeElement.value,
+          format: elements.singleClickFormatElement.value,
+        },
+        double: {
+          type: elements.doubleClickTypeElement.value,
+          format: elements.doubleClickFormatElement.value,
+        },
+        triple: {
+          type: elements.tripleClickTypeElement.value,
+          format: elements.tripleClickFormatElement.value,
+        },
+      },
+    };
 
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const timestamp = `${year}${month}${day}-${hours}${minutes}`;
-  const filename = `copy-title-url-config-${timestamp}.json`;
+    const jsonString = JSON.stringify(config, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
 
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const timestamp = `${year}${month}${day}-${hours}${minutes}`;
+    const filename = `copy-title-url-config-v2-${timestamp}.json`;
 
-  showStatusMessage('Configuration exported successfully!');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showStatusMessage('Configuration exported successfully!');
+  } catch (error) {
+    console.error('Error exporting configuration:', error);
+    showStatusMessage(`Error exporting configuration: ${error.message}`, true);
+  }
 }
 
 /**
@@ -524,71 +543,13 @@ async function importConfigAndReload() {
       }
       const importedConfig = JSON.parse(content);
 
-      // Validate the imported configuration format
-      if (!importedConfig.format || typeof importedConfig.format !== 'object') {
-        showStatusMessage(
-          'Invalid configuration: `format` object missing.',
-          true,
-        );
-        return;
+      // Check for version to handle different config structures
+      if (importedConfig.version === 2) {
+        await importV2Config(importedConfig);
+      } else {
+        await importV1Config(importedConfig); // Legacy support
       }
 
-      const dataToSave = {};
-      let updatePerformed = false;
-
-      clickTypes.forEach((type) => {
-        const formatValue = importedConfig.format[type];
-        const formatTypeKey = `${type}ClickFormatType`;
-        const formatValueKey = `${type}ClickFormat`;
-
-        if (typeof formatValue === 'string') {
-          // Check if a 'types' object exists and has a corresponding type
-          const importedType = importedConfig.types?.[type];
-
-          if (importedType && PREDEFINED_FORMATS[importedType]) {
-            // If a valid type is provided, use it
-            dataToSave[formatTypeKey] = importedType;
-            if (importedType === 'custom') {
-              dataToSave[formatValueKey] = formatValue; // Use the format value as custom
-            } else {
-              // If it's a predefined type, ensure the format value matches the predefined one
-              // This handles cases where a user might manually edit the JSON
-              dataToSave[formatValueKey] =
-                PREDEFINED_FORMATS[importedType].value;
-            }
-          } else {
-            // Type not provided or invalid, determine type by matching formatValue
-            let matchedType = 'custom'; // Default to custom
-            for (const key in PREDEFINED_FORMATS) {
-              if (
-                key !== 'custom' &&
-                PREDEFINED_FORMATS[key].value === formatValue
-              ) {
-                matchedType = key;
-                break;
-              }
-            }
-            dataToSave[formatTypeKey] = matchedType;
-            dataToSave[formatValueKey] = formatValue;
-          }
-          updatePerformed = true;
-        } else if (formatValue !== undefined) {
-          // Handle case where format.single exists but is not a string (invalid)
-          console.warn(`Invalid format value for ${type}:`, formatValue);
-        }
-      });
-
-      if (!updatePerformed) {
-        showStatusMessage(
-          'No valid format data found in the imported file for single, double, or triple clicks.',
-          true,
-        );
-        importFile.value = '';
-        return;
-      }
-
-      // Save the new settings to chrome.storage.sync
-      await chrome.storage.sync.set(dataToSave);
       showStatusMessage(
         'Configuration imported successfully! Reloading settings...',
       );
@@ -612,4 +573,86 @@ async function importConfigAndReload() {
   };
 
   reader.readAsText(file);
+}
+
+/**
+ * Handles importing of the new V2 configuration format.
+ * @param {object} config - The V2 configuration object.
+ */
+async function importV2Config(config) {
+  const syncDataToSave = {};
+  const localDataToSave = {};
+
+  // Import auto-save screenshot settings
+  if (typeof config.autoSaveScreenshot === 'boolean') {
+    syncDataToSave.autoSaveScreenshot = config.autoSaveScreenshot;
+  }
+  if (typeof config.screenshotSavePath === 'string') {
+    localDataToSave.screenshotSavePath = config.screenshotSavePath;
+  }
+
+  // Import title preprocessing rules
+  if (Array.isArray(config.titlePreprocessingRules)) {
+    syncDataToSave.titlePreprocessingRules = config.titlePreprocessingRules;
+  }
+
+  // Import click formats
+  if (config.formats && typeof config.formats === 'object') {
+    clickTypes.forEach((type) => {
+      const formatConfig = config.formats[type];
+      if (formatConfig && typeof formatConfig.type === 'string' && typeof formatConfig.format === 'string') {
+        syncDataToSave[`${type}ClickFormatType`] = formatConfig.type;
+        syncDataToSave[`${type}ClickFormat`] = formatConfig.format;
+      }
+    });
+  }
+
+  // Save all settings
+  await chrome.storage.sync.set(syncDataToSave);
+  await chrome.storage.local.set(localDataToSave);
+}
+
+/**
+ * Handles importing of the legacy V1 configuration format.
+ * @param {object} config - The V1 configuration object.
+ */
+async function importV1Config(config) {
+  // Validate the imported configuration format
+  if (!config.format || typeof config.format !== 'object') {
+    throw new Error('Invalid configuration: `format` object missing.');
+  }
+
+  const dataToSave = {};
+  let updatePerformed = false;
+
+  clickTypes.forEach((type) => {
+    const formatValue = config.format[type];
+    const formatTypeKey = `${type}ClickFormatType`;
+    const formatValueKey = `${type}ClickFormat`;
+
+    if (typeof formatValue === 'string') {
+      const importedType = config.types?.[type];
+      if (importedType && PREDEFINED_FORMATS[importedType]) {
+        dataToSave[formatTypeKey] = importedType;
+        dataToSave[formatValueKey] = (importedType === 'custom') ? formatValue : PREDEFINED_FORMATS[importedType].value;
+      } else {
+        let matchedType = 'custom';
+        for (const key in PREDEFINED_FORMATS) {
+          if (key !== 'custom' && PREDEFINED_FORMATS[key].value === formatValue) {
+            matchedType = key;
+            break;
+          }
+        }
+        dataToSave[formatTypeKey] = matchedType;
+        dataToSave[formatValueKey] = formatValue;
+      }
+      updatePerformed = true;
+    }
+  });
+
+  if (!updatePerformed) {
+    throw new Error('No valid format data found in the imported file.');
+  }
+
+  await chrome.storage.sync.set(dataToSave);
 }
