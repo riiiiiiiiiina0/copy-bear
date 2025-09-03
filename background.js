@@ -12,6 +12,7 @@
  * @constant
  */
 const ACTION_DESCRIPTIONS = {
+  do_nothing: { name: 'Do nothing', value: 'do_nothing' },
   title_url_2_lines: {
     name: 'Title and url (2 lines)',
     value: '<title>\\n<url>',
@@ -34,6 +35,8 @@ const DEFAULT_FORMAT_TYPES = {
   singleClickFormatType: 'title_url_2_lines',
   doubleClickFormatType: 'markdown',
   tripleClickFormatType: 'title_url_1_line',
+  fourthClickFormatType: 'do_nothing',
+  fifthClickFormatType: 'do_nothing',
 };
 
 /**
@@ -265,6 +268,10 @@ async function performClickAction(tabs, clickType) {
     // Replace literal '\n' (from user input) with actual newline characters in the template
     formatTemplate = formatTemplate.replace(/\\n/g, '\n');
 
+    if (formatTemplate === 'do_nothing') {
+      return;
+    }
+
     // Handle screenshot action separately
     if (formatTemplate === '<screenshot>') {
       if (tabs.length > 0 && tabs[0].id) {
@@ -492,6 +499,14 @@ async function performTripleClickAction(tabs) {
   performClickAction(tabs, 'triple');
 }
 
+async function performFourthClickAction(tabs) {
+  performClickAction(tabs, 'fourth');
+}
+
+async function performFifthClickAction(tabs) {
+  performClickAction(tabs, 'fifth');
+}
+
 /**
  * Copies specified text to clipboard using the most compatible method available
  * @param {number} tabId - The ID of the tab to execute the script in
@@ -647,6 +662,8 @@ async function updateContextMenus() {
     singleClickFormatType: DEFAULT_FORMAT_TYPES.singleClickFormatType,
     doubleClickFormatType: DEFAULT_FORMAT_TYPES.doubleClickFormatType,
     tripleClickFormatType: DEFAULT_FORMAT_TYPES.tripleClickFormatType,
+    fourthClickFormatType: DEFAULT_FORMAT_TYPES.fourthClickFormatType,
+    fifthClickFormatType: DEFAULT_FORMAT_TYPES.fifthClickFormatType,
   });
 
   const single =
@@ -655,6 +672,10 @@ async function updateContextMenus() {
     ACTION_DESCRIPTIONS[items.doubleClickFormatType]?.name || 'Unknown';
   const triple =
     ACTION_DESCRIPTIONS[items.tripleClickFormatType]?.name || 'Unknown';
+  const fourth =
+    ACTION_DESCRIPTIONS[items.fourthClickFormatType]?.name || 'Unknown';
+  const fifth =
+    ACTION_DESCRIPTIONS[items.fifthClickFormatType]?.name || 'Unknown';
 
   chrome.contextMenus.create({
     id: 'single-click',
@@ -671,6 +692,18 @@ async function updateContextMenus() {
   chrome.contextMenus.create({
     id: 'triple-click',
     title: `3️⃣ ${triple}`,
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'fourth-click',
+    title: `4️⃣ ${fourth}`,
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'fifth-click',
+    title: `5️⃣ ${fifth}`,
     contexts: ['all'],
   });
 }
@@ -690,6 +723,8 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       'singleClickFormatType',
       'doubleClickFormatType',
       'tripleClickFormatType',
+      'fourthClickFormatType',
+      'fifthClickFormatType',
     ];
     if (formatKeys.some((key) => key in changes)) {
       updateActionButtonTitle();
@@ -704,28 +739,30 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     currentWindow: true,
   });
 
-  if (!highlightedTabs || highlightedTabs.length === 0) {
-    if (!tab || !tab.id) {
-      console.error('No valid tab found for action.');
-      showBadgeText('⚠️', true);
-      return;
-    }
-    if (info.menuItemId === 'single-click') {
-      performSingleClickAction([tab]);
-    } else if (info.menuItemId === 'double-click') {
-      performDoubleClickAction([tab]);
-    } else if (info.menuItemId === 'triple-click') {
-      performTripleClickAction([tab]);
-    }
+  const tabsToUse =
+    !highlightedTabs || highlightedTabs.length === 0 ? [tab] : highlightedTabs;
+  if (!tabsToUse[0] || !tabsToUse[0].id) {
+    console.error('No valid tab found for action.');
+    showBadgeText('⚠️', true);
     return;
   }
 
-  if (info.menuItemId === 'single-click') {
-    performSingleClickAction(highlightedTabs);
-  } else if (info.menuItemId === 'double-click') {
-    performDoubleClickAction(highlightedTabs);
-  } else if (info.menuItemId === 'triple-click') {
-    performTripleClickAction(highlightedTabs);
+  switch (info.menuItemId) {
+    case 'single-click':
+      performSingleClickAction(tabsToUse);
+      break;
+    case 'double-click':
+      performDoubleClickAction(tabsToUse);
+      break;
+    case 'triple-click':
+      performTripleClickAction(tabsToUse);
+      break;
+    case 'fourth-click':
+      performFourthClickAction(tabsToUse);
+      break;
+    case 'fifth-click':
+      performFifthClickAction(tabsToUse);
+      break;
   }
 });
 

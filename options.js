@@ -14,6 +14,7 @@
  * @constant
  */
 const PREDEFINED_FORMATS = {
+  do_nothing: { name: 'Do nothing', value: 'do_nothing' },
   title_url_2_lines: {
     name: 'Title and URL (2 lines)',
     value: '<title>\n<url>',
@@ -35,7 +36,9 @@ const PREDEFINED_FORMATS = {
 const DEFAULT_FORMAT_TYPES = {
   singleClickFormatType: 'title_url_2_lines',
   doubleClickFormatType: 'markdown',
-  tripleClickFormatType: 'title_url_1_line', // Example: changed default for triple
+  tripleClickFormatType: 'title_url_1_line',
+  fourthClickFormatType: 'do_nothing',
+  fifthClickFormatType: 'do_nothing',
 };
 
 // Original default format values, still needed for reset and initial save if type isn't 'custom'
@@ -43,10 +46,12 @@ const DEFAULT_FORMAT_VALUES = {
   singleClickFormat: PREDEFINED_FORMATS.title_url_2_lines.value,
   doubleClickFormat: PREDEFINED_FORMATS.markdown.value,
   tripleClickFormat: PREDEFINED_FORMATS.title_url_1_line.value,
+  fourthClickFormat: PREDEFINED_FORMATS.do_nothing.value,
+  fifthClickFormat: PREDEFINED_FORMATS.do_nothing.value,
 };
 
 // Element selectors
-const clickTypes = ['single', 'double', 'triple'];
+const clickTypes = ['single', 'double', 'triple', 'fourth', 'fifth'];
 const elements = {
   autoSaveScreenshotElement: /** @type {HTMLInputElement} */ (
     document.getElementById('autoSaveScreenshot')
