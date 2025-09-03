@@ -8,6 +8,7 @@ Copy Bear has one job, and it does it adorably well: copy your selected tab(s) t
 - Copy many tabs at once: Select multiple tabs, then click — Copy Bear gathers them all.
 - Include selected text: Highlight text on a page to include it as <quote> automatically.
 - Quick shortcut: Cmd+Shift+1 (macOS) or Ctrl+Shift+1 (Windows/Linux).
+- Right-click menu access: All three copy actions are available from the context menu, so you can copy without clicking the toolbar icon.
 - Page title preprocessing rules: Apply custom transformations to the page title before copying it into your clipboard. Create automation rules to modify titles (such as trimming, replacing, or reformatting) to fit your workflow.
 
 🛠️ How to use

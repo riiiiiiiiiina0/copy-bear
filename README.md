@@ -18,6 +18,7 @@
 - **Single click**: Copies using your Single‑click format (default is Title + Url in 2 lines).
 - **Double click**: Copies using your Double‑click format (default is Title + Url in markdown).
 - **Triple click**: Copies using your Triple‑click format (default is Title + Url in 1 line).
+- **Right-click menu**: All three actions are also available in the right-click context menu for quick access without changing your click habit.
 - **Multi‑tab**: Select several tabs first, then click the bear to copy them all.
 
 Default shortcut: `Cmd+Shift+1` on macOS, `Ctrl+Shift+1` on Windows/Linux.
