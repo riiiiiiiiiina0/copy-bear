@@ -174,7 +174,7 @@
             <!-- Single Click -->
             <div>
               <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2"
-                for="single-click-type">Single Click</label>
+                for="single-click-type">1️⃣ Context Menu & ☝️ Single Click</label>
               <select id="single-click-type" name="singleClickFormatType"
                 class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
                 <!-- Options will be populated by JS, but we can put them here for SSR/no-JS fallback -->
@@ -190,7 +190,7 @@
             <!-- Double Click -->
             <div>
               <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2"
-                for="double-click-type">Double Click</label>
+                for="double-click-type">2️⃣ Context Menu & ✌️ Double Click</label>
               <select id="double-click-type" name="doubleClickFormatType"
                 class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
                 <!-- Options will be populated by JS -->
@@ -205,7 +205,7 @@
             <!-- Triple Click -->
             <div>
               <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2"
-                for="triple-click-type">Triple Click</label>
+                for="triple-click-type">3️⃣ Context Menu & 🖖 Triple Click</label>
               <select id="triple-click-type" name="tripleClickFormatType"
                 class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
                 <!-- Options will be populated by JS -->
@@ -215,6 +215,36 @@
                 class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500"
                 style="display: none;"></textarea>
               <textarea id="triple-click-format" name="tripleClickFormat" class="hidden" rows="1"></textarea>
+            </div>
+
+            <!-- Fourth Context Menu -->
+            <div>
+              <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2"
+                for="fourth-click-type">4️⃣ Context Menu</label>
+              <select id="fourth-click-type" name="fourthClickFormatType"
+                class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
+                <!-- Options will be populated by JS -->
+              </select>
+              <textarea id="fourth-click-custom-format" name="fourthClickCustomFormat" rows="3"
+                placeholder="Enter custom format..."
+                class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500"
+                style="display: none;"></textarea>
+              <textarea id="fourth-click-format" name="fourthClickFormat" class="hidden" rows="1"></textarea>
+            </div>
+
+            <!-- Fifth Context Menu -->
+            <div>
+              <label class="block text-lg font-medium text-gray-800 dark:text-slate-200 mb-2"
+                for="fifth-click-type">5️⃣ Context Menu</label>
+              <select id="fifth-click-type" name="fifthClickFormatType"
+                class="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 mb-2">
+                <!-- Options will be populated by JS -->
+              </select>
+              <textarea id="fifth-click-custom-format" name="fifthClickCustomFormat" rows="3"
+                placeholder="Enter custom format..."
+                class="w-full p-4 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition duration-150 ease-in-out font-mono text-sm shadow-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500"
+                style="display: none;"></textarea>
+              <textarea id="fifth-click-format" name="fifthClickFormat" class="hidden" rows="1"></textarea>
             </div>
           </div>
           <div class="mt-10 pt-6 border-t border-gray-200 dark:border-slate-700 flex flex-wrap gap-4 justify-end">

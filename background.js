@@ -12,6 +12,7 @@
  * @constant
  */
 const ACTION_DESCRIPTIONS = {
+  do_nothing: { name: 'Do nothing', value: 'do_nothing' },
   title_url_2_lines: {
     name: 'Title and url (2 lines)',
     value: '<title>\\n<url>',
@@ -34,6 +35,8 @@ const DEFAULT_FORMAT_TYPES = {
   singleClickFormatType: 'title_url_2_lines',
   doubleClickFormatType: 'markdown',
   tripleClickFormatType: 'title_url_1_line',
+  fourthClickFormatType: 'do_nothing',
+  fifthClickFormatType: 'do_nothing',
 };
 
 /**
@@ -93,6 +96,8 @@ const FALLBACK_FORMATS = {
   singleClickFormat: '<title>\n<url>',
   doubleClickFormat: '[<title>](<url>)',
   tripleClickFormat: '<title>',
+  fourthClickFormat: 'do_nothing',
+  fifthClickFormat: 'do_nothing',
 };
 
 /**
@@ -255,8 +260,8 @@ async function performClickAction(tabs, clickType) {
 
   try {
     const result = await chrome.storage.sync.get({
-        ...FALLBACK_FORMATS,
-        titlePreprocessingRules: [],
+      ...FALLBACK_FORMATS,
+      titlePreprocessingRules: [],
     });
     const formatKey = `${clickType}ClickFormat`;
     let formatTemplate = result[formatKey] || FALLBACK_FORMATS[formatKey] || '';
@@ -264,6 +269,10 @@ async function performClickAction(tabs, clickType) {
 
     // Replace literal '\n' (from user input) with actual newline characters in the template
     formatTemplate = formatTemplate.replace(/\\n/g, '\n');
+
+    if (formatTemplate === 'do_nothing') {
+      return;
+    }
 
     // Handle screenshot action separately
     if (formatTemplate === '<screenshot>') {
@@ -492,6 +501,14 @@ async function performTripleClickAction(tabs) {
   performClickAction(tabs, 'triple');
 }
 
+async function performFourthClickAction(tabs) {
+  performClickAction(tabs, 'fourth');
+}
+
+async function performFifthClickAction(tabs) {
+  performClickAction(tabs, 'fifth');
+}
+
 /**
  * Copies specified text to clipboard using the most compatible method available
  * @param {number} tabId - The ID of the tab to execute the script in
@@ -640,11 +657,65 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // If content script copy fails for screenshot, it will use '⚠️'.
 });
 
+async function updateContextMenus() {
+  await chrome.contextMenus.removeAll();
+
+  const items = await chrome.storage.sync.get({
+    singleClickFormatType: DEFAULT_FORMAT_TYPES.singleClickFormatType,
+    doubleClickFormatType: DEFAULT_FORMAT_TYPES.doubleClickFormatType,
+    tripleClickFormatType: DEFAULT_FORMAT_TYPES.tripleClickFormatType,
+    fourthClickFormatType: DEFAULT_FORMAT_TYPES.fourthClickFormatType,
+    fifthClickFormatType: DEFAULT_FORMAT_TYPES.fifthClickFormatType,
+  });
+
+  const single =
+    ACTION_DESCRIPTIONS[items.singleClickFormatType]?.name || 'Unknown';
+  const double =
+    ACTION_DESCRIPTIONS[items.doubleClickFormatType]?.name || 'Unknown';
+  const triple =
+    ACTION_DESCRIPTIONS[items.tripleClickFormatType]?.name || 'Unknown';
+  const fourth =
+    ACTION_DESCRIPTIONS[items.fourthClickFormatType]?.name || 'Unknown';
+  const fifth =
+    ACTION_DESCRIPTIONS[items.fifthClickFormatType]?.name || 'Unknown';
+
+  chrome.contextMenus.create({
+    id: 'single-click',
+    title: `1️⃣ ${single}`,
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'double-click',
+    title: `2️⃣ ${double}`,
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'triple-click',
+    title: `3️⃣ ${triple}`,
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'fourth-click',
+    title: `4️⃣ ${fourth}`,
+    contexts: ['all'],
+  });
+
+  chrome.contextMenus.create({
+    id: 'fifth-click',
+    title: `5️⃣ ${fifth}`,
+    contexts: ['all'],
+  });
+}
+
 // -- listeners for updating the action button title --
 
 // Update the title when the extension is first installed or updated
 chrome.runtime.onInstalled.addListener(() => {
   updateActionButtonTitle();
+  updateContextMenus();
 });
 
 // Update the title when the user changes the settings
@@ -654,12 +725,49 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
       'singleClickFormatType',
       'doubleClickFormatType',
       'tripleClickFormatType',
+      'fourthClickFormatType',
+      'fifthClickFormatType',
     ];
     if (formatKeys.some((key) => key in changes)) {
       updateActionButtonTitle();
+      updateContextMenus();
     }
+  }
+});
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  const highlightedTabs = await chrome.tabs.query({
+    highlighted: true,
+    currentWindow: true,
+  });
+
+  const tabsToUse =
+    !highlightedTabs || highlightedTabs.length === 0 ? [tab] : highlightedTabs;
+  if (!tabsToUse[0] || !tabsToUse[0].id) {
+    console.error('No valid tab found for action.');
+    showBadgeText('⚠️', true);
+    return;
+  }
+
+  switch (info.menuItemId) {
+    case 'single-click':
+      performSingleClickAction(tabsToUse);
+      break;
+    case 'double-click':
+      performDoubleClickAction(tabsToUse);
+      break;
+    case 'triple-click':
+      performTripleClickAction(tabsToUse);
+      break;
+    case 'fourth-click':
+      performFourthClickAction(tabsToUse);
+      break;
+    case 'fifth-click':
+      performFifthClickAction(tabsToUse);
+      break;
   }
 });
 
 // Call the function on startup
 updateActionButtonTitle();
+updateContextMenus();
