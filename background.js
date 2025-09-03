@@ -96,6 +96,8 @@ const FALLBACK_FORMATS = {
   singleClickFormat: '<title>\n<url>',
   doubleClickFormat: '[<title>](<url>)',
   tripleClickFormat: '<title>',
+  fourthClickFormat: 'do_nothing',
+  fifthClickFormat: 'do_nothing',
 };
 
 /**
@@ -258,8 +260,8 @@ async function performClickAction(tabs, clickType) {
 
   try {
     const result = await chrome.storage.sync.get({
-        ...FALLBACK_FORMATS,
-        titlePreprocessingRules: [],
+      ...FALLBACK_FORMATS,
+      titlePreprocessingRules: [],
     });
     const formatKey = `${clickType}ClickFormat`;
     let formatTemplate = result[formatKey] || FALLBACK_FORMATS[formatKey] || '';
