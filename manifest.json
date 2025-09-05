@@ -25,6 +25,36 @@
         "mac": "Command+Shift+1"
       },
       "description": "Copy selected tab(s) in your custom format"
+    },
+    "trigger-first-action": {
+      "suggested_key": {
+        "default": "Ctrl+1"
+      },
+      "description": "Trigger the first context menu item action"
+    },
+    "trigger-second-action": {
+      "suggested_key": {
+        "default": "Ctrl+2"
+      },
+      "description": "Trigger the second context menu item action"
+    },
+    "trigger-third-action": {
+      "suggested_key": {
+        "default": "Ctrl+3"
+      },
+      "description": "Trigger the third context menu item action"
+    },
+    "trigger-fourth-action": {
+      "suggested_key": {
+        "default": "Ctrl+4"
+      },
+      "description": "Trigger the fourth context menu item action"
+    },
+    "trigger-fifth-action": {
+      "suggested_key": {
+        "default": "Ctrl+5"
+      },
+      "description": "Trigger the fifth context menu item action"
     }
   },
   "background": {

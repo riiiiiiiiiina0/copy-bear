@@ -770,6 +770,39 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 });
 
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  const highlightedTabs = await chrome.tabs.query({
+    highlighted: true,
+    currentWindow: true,
+  });
+
+  const tabsToUse =
+    !highlightedTabs || highlightedTabs.length === 0 ? [tab] : highlightedTabs;
+  if (!tabsToUse[0] || !tabsToUse[0].id) {
+    console.error('No valid tab found for action.');
+    showBadgeText('⚠️', true);
+    return;
+  }
+
+  switch (command) {
+    case 'trigger-first-action':
+      performSingleClickAction(tabsToUse);
+      break;
+    case 'trigger-second-action':
+      performDoubleClickAction(tabsToUse);
+      break;
+    case 'trigger-third-action':
+      performTripleClickAction(tabsToUse);
+      break;
+    case 'trigger-fourth-action':
+      performFourthClickAction(tabsToUse);
+      break;
+    case 'trigger-fifth-action':
+      performFifthClickAction(tabsToUse);
+      break;
+  }
+});
+
 // Call the function on startup
 updateActionButtonTitle();
 updateContextMenus();
