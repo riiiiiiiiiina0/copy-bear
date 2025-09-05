@@ -660,54 +660,56 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function updateContextMenus() {
   await chrome.contextMenus.removeAll();
 
+  // Also load the actual format strings for custom types
   const items = await chrome.storage.sync.get({
     singleClickFormatType: DEFAULT_FORMAT_TYPES.singleClickFormatType,
     doubleClickFormatType: DEFAULT_FORMAT_TYPES.doubleClickFormatType,
     tripleClickFormatType: DEFAULT_FORMAT_TYPES.tripleClickFormatType,
     fourthClickFormatType: DEFAULT_FORMAT_TYPES.fourthClickFormatType,
     fifthClickFormatType: DEFAULT_FORMAT_TYPES.fifthClickFormatType,
+    // Add format strings, with defaults from FALLBACK_FORMATS
+    singleClickFormat: FALLBACK_FORMATS.singleClickFormat,
+    doubleClickFormat: FALLBACK_FORMATS.doubleClickFormat,
+    tripleClickFormat: FALLBACK_FORMATS.tripleClickFormat,
+    fourthClickFormat: FALLBACK_FORMATS.fourthClickFormat,
+    fifthClickFormat: FALLBACK_FORMATS.fifthClickFormat,
   });
 
-  const single =
-    ACTION_DESCRIPTIONS[items.singleClickFormatType]?.name || 'Unknown';
-  const double =
-    ACTION_DESCRIPTIONS[items.doubleClickFormatType]?.name || 'Unknown';
-  const triple =
-    ACTION_DESCRIPTIONS[items.tripleClickFormatType]?.name || 'Unknown';
-  const fourth =
-    ACTION_DESCRIPTIONS[items.fourthClickFormatType]?.name || 'Unknown';
-  const fifth =
-    ACTION_DESCRIPTIONS[items.fifthClickFormatType]?.name || 'Unknown';
+  const clickTypes = [
+    { type: 'single', emoji: '1️⃣' },
+    { type: 'double', emoji: '2️⃣' },
+    { type: 'triple', emoji: '3️⃣' },
+    { type: 'fourth', emoji: '4️⃣' },
+    { type: 'fifth', emoji: '5️⃣' },
+  ];
 
-  chrome.contextMenus.create({
-    id: 'single-click',
-    title: `1️⃣ ${single}`,
-    contexts: ['all'],
-  });
+  for (const click of clickTypes) {
+    const formatTypeKey = `${click.type}ClickFormatType`;
+    const formatKey = `${click.type}ClickFormat`;
+    const menuId = `${click.type}-click`;
 
-  chrome.contextMenus.create({
-    id: 'double-click',
-    title: `2️⃣ ${double}`,
-    contexts: ['all'],
-  });
+    let title;
+    const formatType = items[formatTypeKey];
 
-  chrome.contextMenus.create({
-    id: 'triple-click',
-    title: `3️⃣ ${triple}`,
-    contexts: ['all'],
-  });
+    if (formatType === 'custom') {
+      let customFormat = items[formatKey] || '';
+      // remove all newlines and replace with a space for readability
+      customFormat = customFormat.replace(/\\n|\n/g, ' ');
+      if (customFormat.length > 50) {
+        title = customFormat.substring(0, 50) + '...';
+      } else {
+        title = customFormat;
+      }
+    } else {
+      title = ACTION_DESCRIPTIONS[formatType]?.name || 'Unknown';
+    }
 
-  chrome.contextMenus.create({
-    id: 'fourth-click',
-    title: `4️⃣ ${fourth}`,
-    contexts: ['all'],
-  });
-
-  chrome.contextMenus.create({
-    id: 'fifth-click',
-    title: `5️⃣ ${fifth}`,
-    contexts: ['all'],
-  });
+    chrome.contextMenus.create({
+      id: menuId,
+      title: `${click.emoji} ${title}`,
+      contexts: ['all'],
+    });
+  }
 }
 
 // -- listeners for updating the action button title --
