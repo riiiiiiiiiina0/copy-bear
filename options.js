@@ -23,6 +23,7 @@ const PREDEFINED_FORMATS = {
     name: 'Title and URL (1 line)',
     value: '<title> - <url>',
   },
+  title: { name: 'Title', value: '<title>' },
   markdown: { name: 'Markdown', value: '[<title>](<url>)' },
   screenshot: { name: 'Screenshot', value: '<screenshot>' }, // Added Screenshot option
   custom: { name: 'Custom Format', value: '' }, // Custom value will be from textarea
