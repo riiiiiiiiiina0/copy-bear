@@ -22,6 +22,7 @@ const ACTION_DESCRIPTIONS = {
     value: '<title> - <url>',
   },
   markdown: { name: 'Markdown', value: '[<title>](<url>)' },
+  title: { name: 'Title', value: '<title>' },
   screenshot: { name: 'Screenshot', value: '<screenshot>' },
   custom: { name: 'Custom format', value: '' }, // Note: 'value' is not used here, but kept for structure consistency
 };
