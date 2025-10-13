@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Copy Bear",
-  "version": "1.29",
+  "version": "1.30",
   "description": "One-click to copy selected tab(s) title, URL, and selected text in your favorite custom format.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtROR8tjK8PWEF8+u4lgl3AvA5i4RciNSYt5yghYuT27svjXcAIYg7YVpZ0vUUpdXha9BdZldCv4gRybtX3eWwMLD9eRoA5UU8UX2QK1P9p0NF9CIpIGBv1ssP7ZOFOJ42k8Q/BEVCX4VlYgoKZnmECaBqCFyo45z3pFYj+W3lqWNn6MR01sNhKWLUL0tC4SUzV38nDHII5cgvGYnwkvbM2KduCAmJat271eVUDafLjeevFB8btdqoiU14SiYt+DIdwScTjXoTbeCEmMd+ZeKivhlG7A6gV9y0/nnemyiGlZwRCMHMak7AcC8TL2txUqjwo/YlrjK/lDcR3XURY3k5QIDAQAB",
   "permissions": [
