@@ -1,24 +1,20 @@
-🐻 Copy Bear — One‑click custom copy for your tabs
+🐻‍❄️ Copy Bear
 
-Copy Bear has one job, and it does it adorably well: copy your selected tab(s) title, URL, and any selected text in your favorite custom format — with just one click.
+Your friendly clipboard companion for lightning-fast copying and formatting!
 
-✨ What you can do
-- One‑click copy: Hit the toolbar button and your neatly formatted text is ready to paste.
-- Your format, your rules: Use placeholders like <title>, <url>, <quote>, and \n to shape the output.
-- Copy many tabs at once: Select multiple tabs, then click — Copy Bear gathers them all.
-- Include selected text: Highlight text on a page to include it as <quote> automatically.
-- Quick shortcut: Cmd+Shift+1 (macOS) or Ctrl+Shift+1 (Windows/Linux).
-- Right-click menu access: All three copy actions are available from the context menu, so you can copy without clicking the toolbar icon.
-- Page title preprocessing rules: Apply custom transformations to the page title before copying it into your clipboard. Create automation rules to modify titles (such as trimming, replacing, or reformatting) to fit your workflow.
+✨ One-Click Magic
+- 📋 Copy a webpage's title and URL with a single click.
+- 📝 Use pre-defined formats like Markdown, or create your own!
+- 📸 Take a screenshot of the current tab and copy it to your clipboard.
 
-🛠️ How to use
-1. Install Copy Bear and pin it to your toolbar.
-2. Click the bear once to copy using your Single‑click format.
-3. Double‑click for your Double‑click format. Triple‑click for your Triple‑click format.
-4. Right‑click the icon → Options to customize your formats and set up page title preprocessing rules.
+🚀 Power-User Features
+- 🖱️ Assign different formats to single, double, or triple clicks.
+- 🔗 Open new tabs with custom URLs, like creating a new calendar event with the page title.
+- ✂️ Automatically clean up URLs by removing tracking parameters (UTM).
+- ✍️ Pre-process page titles with your own rules.
 
-🔒 Permissions and privacy
-- Needed permissions: activeTab, tabs, clipboardWrite, storage.
-- Your data never leaves your browser. No accounts. No tracking. Just copy.
+🎉 And More!
+- ⌨️ Quick access from the context menu.
+- 🎨 Customize everything to fit your workflow.
 
-Happy copying! 🍯
+Copy Bear makes it super easy to grab the info you need, exactly how you want it. Give it a try!
